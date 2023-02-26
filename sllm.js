@@ -278,63 +278,63 @@ program
   	.version(VERSION_NUMBER);
 
 program.command('prompt', {isDefault: true})
-	.description('Send a prompt (default command)')
+	.description('send a prompt (default command)')
 	.argument('<prompt...>', 'the prompt text')
 	.option('-m, --max-tokens <number>', 'maximum tokens to use', '256')
 	.option('-t, --temperature <number>', 'temperature to use', '0.2')
-	.option('-c, --context <string...>', 'Context to prepend')
-	.option('-d, --domain <string...>', 'Subject domain to prepend')
-	.option('-e, --expert <string...>', 'Act as an expert on this domain')
-	.option('-5, --like-im-five', 'Explain it like I\'m 5 years old')
-	.option('-H, --history <number>', 'Prepend history (chatGPT mode)')
-	.option('-f, --file <path>', 'Preprend the given file contents')
+	.option('-c, --context <string...>', 'context to prepend')
+	.option('-d, --domain <string...>', 'subject domain to prepend')
+	.option('-e, --expert <string...>', 'act as an expert on this domain')
+	.option('-5, --like-im-five', 'explain it like I\'m 5 years old')
+	.option('-H, --history <number>', 'prepend history (chatGPT mode)')
+	.option('-f, --file <path>', 'preprend the given file contents')
 	.option('-v, --verbose', 'verbose output')
-	.option('-M, --mock', 'Dont actually send the prompt to the API')
+	.option('-M, --mock', 'dont actually send the prompt to the API')
 	.action((prompt, options) => {
 		run(prompt, options);
   	});
 
 program.command('set')
-	.description('Set a persistant command option')
+	.description('set a persistant command option')
 	.option('-m, --max-tokens <number>', 'maximum tokens to use', '256')
 	.option('-t, --temperature <number>', 'temperature to use', '0.2')
-	.option('-c, --context <string...>', 'Context to prepend')
-	.option('-d, --domain <string...>', 'Subject domain to prepend')
-	.option('-e, --expert <string...>', 'Act as an expert on this domain')
-	.option('-5, --like-im-five', 'Explain it like I\'m 5 years old')
-	.option('-H, --history <number>', 'Prepend history (chatGPT mode)')
-	.option('-f, --file <path>', 'Preprend the given file contents')
+	.option('-c, --context <string...>', 'dontext to prepend')
+	.option('-d, --domain <string...>', 'subject domain to prepend')
+	.option('-e, --expert <string...>', 'act as an expert on this domain')
+	.option('-5, --like-im-five', 'explain it like I\'m 5 years old')
+	.option('-H, --history <number>', 'prepend history (chatGPT mode)')
+	.option('-f, --file <path>', 'preprend the given file contents')
 	.option('-v, --verbose', 'verbose output')
-	.option('-M, --mock', 'Dont actually send the prompt to the API')
+	.option('-M, --mock', 'dont actually send the prompt to the API')
 	.action((options) => {
 		setOpts(options);
 	});
 
 program.command('settings')
-	.description('View the current settings that were changed via the \`set\` command.')
+	.description('view the current settings that were changed via the \`set\` command')
 	.option('-d, --delete', 'Delete the current settings')
 	.action((options) =>{
 		settings(options);
 	});
 
 program.command('hist')
-	.description('Manage the prompt/response history')
-	.option('-v, --view <number>', 'View the prompt history', '8')
-	.option('-d, --delete', 'Delete the prompt history')
+	.description('manage the prompt / response history')
+	.option('-v, --view <number>', 'view the prompt history', '8')
+	.option('-d, --delete', 'delete the prompt history')
 	.action((options) => {
 		history(options);
 	});
 
 program.command('purge')
-	.description('Delete all history and settings')
+	.description('delete all history and settings')
 	.action(()=>{
 		purge();
 	});
 
 program.command('count')
-	.description('Estimate the tokens used by a prompt or file')
-	.option('-p, --prompt <string...>', 'The prompt to check')
-	.option('-f, --file <path>', 'The file path')
+	.description('estimate the tokens used by a prompt or file')
+	.option('-p, --prompt <string...>', 'the prompt string to check')
+	.option('-f, --file <path>', 'the file path to check')
 	.action((options)=>{
 		countTokens(options);
 	});

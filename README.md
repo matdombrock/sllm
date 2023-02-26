@@ -70,6 +70,8 @@ This will remind the LLM about the last 4 prompts it was given.
 
 ## Overview
 ```
+$ sllm -h
+
 Usage: sllm [options] [command]
 
 CLI for GPT3. Created by Mathieu Dombrock 2023. GPL3 License.
@@ -79,12 +81,12 @@ Options:
   -h, --help                    display help for command
 
 Commands:
-  prompt [options] <prompt...>  Send a prompt (default command)
-  set [options]                 Set a persistant command option
-  settings [options]            View the current settings that were changed via the `set` command.
-  hist [options]                Manage the prompt/response history
-  purge                         Delete all history and settings
-  count [options]               Estimate the tokens used by a prompt or file
+  prompt [options] <prompt...>  send a prompt (default command)
+  set [options]                 set a persistant command option
+  settings [options]            view the current settings that were changed via the `set` command
+  hist [options]                manage the prompt / response history
+  purge                         delete all history and settings
+  count [options]               estimate the tokens used by a prompt or file
   help [command]                display help for command
 
 ```
@@ -104,12 +106,14 @@ Arguments:
 Options:
   -m, --max-tokens <number>   maximum tokens to use (default: "256")
   -t, --temperature <number>  temperature to use (default: "0.2")
-  -c, --context <string...>   Context to prepend
-  -d, --domain <string...>    Subject domain to prepend
-  -e, --expert <string...>    Act as an expert on this domain
-  -H, --history <number>      Prepend history (chatGPT mode) (default: "0")
+  -c, --context <string...>   context to prepend
+  -d, --domain <string...>    subject domain to prepend
+  -e, --expert <string...>    act as an expert on this domain
+  -5, --like-im-five          explain it like I'm 5 years old
+  -H, --history <number>      prepend history (chatGPT mode)
+  -f, --file <path>           preprend the given file contents
   -v, --verbose               verbose output
-  -M, --mock                  Dont actually send the prompt to the API
+  -M, --mock                  dont actually send the prompt to the API
   -h, --help                  display help for command
 
 ```
@@ -147,6 +151,4 @@ $ sllm what is this file about? -f mute.cpp
 
 $ sllm what is this file about? -f cfg.txt
   This file is about creating a GIF animation of Conway's Game of Life using the .sorg settings. The animation will have a file name of "life", a frame delay of 1, 512 frames to render, 0 generations to run before render, a canvas width of 64, a canvas height of 64, a pixel/image scale of 8, a gif color pallet of lime, and a rule set of dtsd. Additionally, the .sorg settings include a file to load of "noise", a center of 0, an x offset of 1, and a y offset of 1.
-
-
 ```
