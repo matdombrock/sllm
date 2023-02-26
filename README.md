@@ -70,8 +70,6 @@ This will remind the LLM about the last 4 prompts it was given.
 
 ## Overview
 ```
-$ sllm -h
-
 Usage: sllm [options] [command]
 
 CLI for GPT3. Created by Mathieu Dombrock 2023. GPL3 License.
@@ -83,9 +81,12 @@ Options:
 Commands:
   prompt [options] <prompt...>  Send a prompt (default command)
   set [options]                 Set a persistant command option
-  settings                      View the current settings that were changed via the `set` command.
+  settings [options]            View the current settings that were changed via the `set` command.
   hist [options]                Manage the prompt/response history
+  purge                         Delete all history and settings
+  count [options]               Estimate the tokens used by a prompt or file
   help [command]                display help for command
+
 ```
 
 ## Prompt
@@ -110,6 +111,7 @@ Options:
   -v, --verbose               verbose output
   -M, --mock                  Dont actually send the prompt to the API
   -h, --help                  display help for command
+
 ```
 
 ## Working With Files
@@ -139,5 +141,4 @@ $ sllm is this file NodeJS or Browser JS? -f example.js
 $ sllm why do you say that?
 
   This file contains code that is specific to Node.js, such as the require statement, which is not supported in browser JavaScript.
-
 ```
