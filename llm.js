@@ -231,12 +231,28 @@ function purge(){
 	console.log('Purged!');
 }
 
+function countTokens(options){
+	let tokens = 0;
+	if(options.prompt){
+		options.prompt = options.prompt.join(' ');
+		const encoded = encode(options.prompt);
+		tokens += encoded.length;
+	}
+	if(options.file){
+		const contents = fs.readFileSync(options.file, 'UTF-8');
+		const encoded = encode(contents);
+		tokens += encoded.length;
+	}
+	console.log('Estimated Tokens: '+tokens+'/'+'4096');
+	console.log('Max Reply: '+(4096-tokens));
+}
+
 const program = new Command();
 
 program
   .name('sllm')
   .description('CLI for GPT3. Created by Mathieu Dombrock 2023. GPL3 License.')
-  .version('0.8.1');
+  .version('0.8.2');
 
 program.command('prompt', {isDefault: true})
 	.description('Send a prompt (default command)')
@@ -288,6 +304,14 @@ program.command('purge')
 	.description('Delete all history and settings')
 	.action(()=>{
 		purge();
+	});
+
+program.command('count')
+	.description('Estimate the tokens used by a prompt or file')
+	.option('-p, --prompt <string...>', 'The prompt to check')
+	.option('-f, --file <path>', 'The file path')
+	.action((options)=>{
+		countTokens(options);
 	});
 
 program.parse();
