@@ -15,6 +15,9 @@ const { Command } = require('commander'); // (normal include)
 
 const MAX_HISTORY_STORE = 64;
 
+// Read package.json version number
+const VERSION_NUMBER = JSON.parse(fs.readFileSync(__dirname+'/package.json')).version;
+
 // Ensure we have an api key env var
 if(!process.env.OPENAI_API_KEY){
     let err = 'ERROR: OPENAI_API_KEY unset\r\n';
@@ -108,7 +111,7 @@ async function run(prompt, options){
 	}
 	
 	// Make the request
-	let output = 'No Response!';
+	let output = 'WARNING: Did not send!';
 	if(!options.mock){
 		const completion = await openai.createCompletion({
   			model: "text-davinci-003",
@@ -118,11 +121,19 @@ async function run(prompt, options){
 		});
 		output = completion.data.choices[0].text;
 	}
+
 	// Strip dialog references
 	if(options.history){
 		output = output.replace('_user_:','');
 		output = output.replace('_llm_:','');
 	}
+
+	// Check for empty response
+	if(output.length < 1){
+		output = "WARNING: Something went wrong! Try Again."
+	}
+	
+
 	// Trim whitesapce
 	output = output.trim();
 	// Log output
@@ -260,9 +271,9 @@ function countTokens(options){
 const program = new Command();
 
 program
-  .name('sllm')
-  .description('CLI for GPT3. Created by Mathieu Dombrock 2023. GPL3 License.')
-  .version('0.8.4');
+  	.name('sllm')
+  	.description('CLI for GPT3. Created by Mathieu Dombrock 2023. GPL3 License.')
+  	.version(VERSION_NUMBER);
 
 program.command('prompt', {isDefault: true})
 	.description('Send a prompt (default command)')

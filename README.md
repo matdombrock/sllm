@@ -63,7 +63,7 @@ According to the latest estimates, there are approximately 1.4 billion people li
 To enable a "chat mode" similar to chatGPT, run the following command:
 
 ```
-sllm set -H 4
+sllm set -H 3
 ```
 
 This will remind the LLM about the last 4 prompts it was given. 
