@@ -91,3 +91,33 @@ Options:
   -M, --mock                  Dont actually send the prompt to the API
   -h, --help                  display help for command
 ```
+
+## Working With Files
+
+You can prepend a reference to a file with the `-f` or `--file` option.
+
+However, be aware that files can not exceed 4k tokens.
+
+```
+$ sllm what dependancies does this have -f ./package.json
+
+ This package.json file has two dependencies: gpt-3-encoder and openai.
+
+$ sllm what version of npm is this file built for? -f ./package.json
+
+  This package.json file is built for npm version 6.14.4 or higher.
+
+$ cat example.js
+
+  const e = require('./llm.js');
+  console.log(e);
+
+$ sllm is this file NodeJS or Browser JS? -f example.js
+
+  This file is Node.js.
+
+$ sllm why do you say that?
+
+  This file contains code that is specific to Node.js, such as the require statement, which is not supported in browser JavaScript.
+
+```

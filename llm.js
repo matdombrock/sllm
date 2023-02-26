@@ -39,6 +39,14 @@ async function run(prompt, options){
 	options.maxTokens = Number(options.maxTokens) || 256;
 	options.temperature = Number(options.temperature) || 0.2;
 	options.history = Number(options.history) || 0;
+
+	// Prepend a file if required
+	if(options.file){
+		if(fs.existsSync(options.file)){
+			prompt = fs.readFileSync(options.file, 'UTF-8')
+				+prompt;
+		}
+	}
 	
 	// Preproceess the prompt
 	if(options.context){
@@ -67,24 +75,27 @@ async function run(prompt, options){
 	// Count total prompt tokens and append to the maxTokens value
 	const encoded = encode(prompt);
 	const tokenCount = encoded.length;
-	const totalTokens = options.maxTokens + tokenCount;
-	// GPT can use a total of 4096 tokens at once
-	// Using 4k for the prompt allows us 96 for response
-	if(totalTokens > 4000){
-		console.log('ERROR: Max Tokens Exceeded');
-		console.log('Please limit your prompt');
-		if(options.history){
-			console.log('Trying running with history off!');
-		}
-	}
+	const totalTokens = options.maxTokens + tokenCount;	
 
 	// Apply verbos outout
 	if(options.verbose){
 		console.log('>> '+ogPrompt+' <<');
 		console.log(JSON.stringify(options, null, 2));
-		console.log('Total Tokens Used: '+totalTokens);
+		console.log('Encoded Tokens: '+encoded.length);
+		console.log('Total Potential Tokens: '+totalTokens);
 		console.log('Sending Prompt...');
 		console.log('-------\r\n');
+	}
+
+	// GPT can use a total of 4096 tokens at once
+	// Using 4k for the prompt allows us 96 for response
+	if(totalTokens > 4000){
+		console.log('ERROR: Max Tokens Exceeded '+'('+totalTokens+')');
+		console.log('Please limit your prompt');
+		if(options.history){
+			console.log('Trying running with history off!');
+		};
+		return;
 	}
 	
 	// Make the request
@@ -93,7 +104,7 @@ async function run(prompt, options){
 		const completion = await openai.createCompletion({
   			model: "text-davinci-003",
   			prompt: prompt,
-			max_tokens: totalTokens,
+			max_tokens: options.maxTokens,
         		temperature: options.temperature
 		});
 		output = completion.data.choices[0].text;
@@ -214,6 +225,7 @@ program.command('prompt', {isDefault: true})
 	.option('-d, --domain <string...>', 'Subject domain to prepend')
 	.option('-e, --expert <string...>', 'Act as an expert on this domain')
 	.option('-H, --history <number>', 'Prepend history (chatGPT mode)', '0')
+	.option('-f, --file <path>', 'Preprend the given file contents')
 	.option('-v, --verbose', 'verbose output')
 	.option('-M, --mock', 'Dont actually send the prompt to the API')
 	.action((prompt, options) => {
@@ -228,6 +240,7 @@ program.command('set')
 	.option('-d, --domain <string...>', 'Subject domain to prepend')
 	.option('-e, --expert <string...>', 'Act as an expert on this domain')
 	.option('-H, --history <number>', 'Prepend history (chatGPT mode)', '0')
+	.option('-f, --file <path>', 'Preprend the given file contents')
 	.option('-v, --verbose', 'verbose output')
 	.option('-M, --mock', 'Dont actually send the prompt to the API')
 	.action((options) => {
