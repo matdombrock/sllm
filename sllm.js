@@ -52,6 +52,8 @@ async function run(prompt, options){
 	if(options.file){
 		if(fs.existsSync(options.file)){
 			prompt = fs.readFileSync(options.file, 'UTF-8')
+				+'\r\n'
+				+'Consider the previous file contents when responding to the prompt: '
 				+prompt;
 		}
 	}

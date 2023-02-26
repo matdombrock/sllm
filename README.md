@@ -141,4 +141,12 @@ $ sllm is this file NodeJS or Browser JS? -f example.js
 $ sllm why do you say that?
 
   This file contains code that is specific to Node.js, such as the require statement, which is not supported in browser JavaScript.
+
+$ sllm what is this file about? -f mute.cpp
+  This file is about demonstrating the differences between mutating a value by reference, by pointer, and not mutating it at all. It contains three functions, noMute, muteR, and muteP, which respectively do not mutate the value, mutate the value by reference, and mutate the value by pointer. There is also a print function to output the results of the functions.
+
+$ sllm what is this file about? -f cfg.txt
+  This file is about creating a GIF animation of Conway's Game of Life using the .sorg settings. The animation will have a file name of "life", a frame delay of 1, 512 frames to render, 0 generations to run before render, a canvas width of 64, a canvas height of 64, a pixel/image scale of 8, a gif color pallet of lime, and a rule set of dtsd. Additionally, the .sorg settings include a file to load of "noise", a center of 0, an x offset of 1, and a y offset of 1.
+
+
 ```
