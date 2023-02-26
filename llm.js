@@ -258,7 +258,7 @@ const program = new Command();
 program
   .name('sllm')
   .description('CLI for GPT3. Created by Mathieu Dombrock 2023. GPL3 License.')
-  .version('0.8.2');
+  .version('0.8.3');
 
 program.command('prompt', {isDefault: true})
 	.description('Send a prompt (default command)')
