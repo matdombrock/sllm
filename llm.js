@@ -243,6 +243,12 @@ function countTokens(options){
 		const encoded = encode(contents);
 		tokens += encoded.length;
 	}
+	if(tokens === 0){
+		console.log('ERROR: Nothing to count');
+		console.log('Use the --prompt or --file options!');
+		return;
+	}
+
 	console.log('Estimated Tokens: '+tokens+'/'+'4096');
 	console.log('Max Reply: '+(4096-tokens));
 }
