@@ -1,4 +1,5 @@
 #! /usr/bin/env node
+
 const fs = require('fs');
 
 const { encode, decode } = require('gpt-3-encoder');
@@ -209,6 +210,12 @@ function setOpts(options){
 	console.log('Created a new settings file');
 }
 
+function purge(){
+	fs.rmSync(__dirname+'/settings.json');
+	fs.rmSync(__dirname+'/history.json');
+	console.log('Purged!');
+}
+
 const program = new Command();
 
 program
@@ -261,7 +268,11 @@ program.command('hist')
 		history(options);
 	});
 
-
+program.command('purge')
+	.description('Delete all history and settings')
+	.action(()=>{
+		purge();
+	});
 
 program.parse();
 
