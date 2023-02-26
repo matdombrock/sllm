@@ -1,6 +1,12 @@
 # SLLM
 A simple, light-weight command line interface for the GPT3 LLM.
 
+> $ sllm what would be the avantage of talking to a LLM via the command line?
+> 
+> The advantage of talking to a LLM via the command line is that it allows for a more efficient and direct way of communicating. It also allows for more precise and specific commands to be used, which can help to quickly get the desired results.
+
+---
+
 > $ sllm what bash command can be used to check the status of a running systemd service?
 > 
 > The command to check the status of a running systemd service is "systemctl status <service_name>".
