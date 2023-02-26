@@ -6,6 +6,9 @@ const { encode, decode } = require('gpt-3-encoder');
 const { Configuration, OpenAIApi } = require("openai");
 
 const { Command } = require('commander'); // (normal include)
+
+
+// Ensure we have an api key env var
 if(!process.env.OPENAI_API_KEY){
     let err = 'ERROR: OPENAI_API_KEY unset\r\n';
     err += 'To set, use the command:\r\n'; 
@@ -14,6 +17,8 @@ if(!process.env.OPENAI_API_KEY){
     console.log(err);
     process.exit();
 }
+// Ensure we have our needed files
+_ensureFiles();
 
 const configuration = new Configuration({
 	apiKey: process.env.OPENAI_API_KEY,
@@ -25,6 +30,9 @@ async function run(prompt, options){
 	// Join prompt into single string
 	prompt = prompt.join(' ');
 	
+	// Set static options
+	options = _loadOpts(options);
+
 	// Ensure numbers
 	options.maxTokens = Number(options.maxTokens) || 256;
 	options.temperature = Number(options.temperature) || 0.2;
@@ -49,7 +57,7 @@ async function run(prompt, options){
 	// Append History
 	const ogPrompt = prompt;// Cache for history etc
 	if(options.history){
-		prompt = fs.readFileSync('./history.txt', 'UTF-8')
+		prompt = _loadHistory()
 			+prompt;	
 	}
 	
@@ -100,29 +108,74 @@ async function run(prompt, options){
 }
 
 
+function _ensureFiles(){
+	if(!fs.existsSync(__dirname+'/history.json')){
+		// Create the file
+		fs.writeFileSync(__dirname+'/history.json', '[]');
+	}
+	if(!fs.existsSync(__dirname+'/settings.json')){
+		// Create the file
+		fs.writeFileSync(__dirname+'/settings.json', '{}');
+	}
+}
+
 function _logHistory(ogPrompt, output){
-	let histOut = '_user_: '+ogPrompt;
-	histOut += '\r\n\r\n';
-	histOut += '_llm_: '+output;
-	histOut += '\r\n\r\n';
-	// Enable for full history
-	//fs.appendFileSync('./history.txt', histOut);
-	fs.writeFileSync('./history.txt', histOut);
+	const histNew = {
+		user: ogPrompt,
+		llm: output
+	};
+	const historyJSON = _loadHistory(true);
+	historyJSON.push(histNew);
+	fs.writeFileSync(__dirname+'/history.json', JSON.stringify(historyJSON, null, 2));
+}
+
+function _loadHistory(json=false){
+	let content = fs.readFileSync(__dirname+'/history.json', 'UTF-8');
+	if(!content){
+		console.log('WARNING: Can not read history file!');	
+		content = '[]';
+	}
+	const historyJSON = JSON.parse(content) || [];
+	if(json){
+		// Return json
+		return historyJSON;
+	}
+	let historyStr = '';
+	for(const item of historyJSON){
+		historyStr += '_user_: '+item.user;
+		historyStr += '\r\n';
+		historyStr += '_llm_: '+item.llm;
+		historyStr += '\r\n';
+	}
+	return historyStr;
 }
 
 function history(options){
 	if(options.delete){
-		fs.rmSync('./history.txt');
+		fs.rmSync(__dirname+'/history.json');
 		console.log('Deleted History');
 		return;
 	}
 	// Default to view
 	options.view = true;
 	if(options.view){
-		const content = fs.readFileSync('./history.txt', 'UTF-8');
+		const content = _loadHistory();
 		console.log(content);
 		return;
 	}
+}
+
+function _loadOpts(options){
+	const content = fs.readFileSync(__dirname+'/settings.json', 'UTF-8');
+	const optJSON = JSON.parse(content);
+	options = Object.assign(options, optJSON);
+	return options;
+}
+
+function setOpts(options){
+	console.log(JSON.stringify(options));
+	fs.writeFileSync(__dirname+'/settings.json', JSON.stringify(options, null, 2));
+	console.log('Created a new settings file');
 }
 
 const program = new Command();
@@ -147,12 +200,26 @@ program.command('prompt', {isDefault: true})
 		run(prompt, options);
   	});
 
-program.command('history')
+program.command('hist')
 	.description('Manage the prompt/response history')
 	.option('-v, --view', 'View the prompt history')
 	.option('-d, --delete', 'Delete the prompt history')
 	.action((options) => {
 		history(options);
+	});
+
+program.command('set')
+	.description('Set a persistant command option')
+	.option('-m, --max-tokens <number>', 'maximum tokens to use')
+	.option('-t, --temperature <number>', 'temperature to use')
+	.option('-c, --context <string...>', 'Context to prepend')
+	.option('-d, --domain <string...>', 'Subject domain to prepend')
+	.option('-e, --expert <string...>', 'Act as an expert on this domain')
+	.option('-H, --history', 'Prepend history (chatGPT mode)')
+	.option('-v, --verbose', 'verbose output')
+	.option('-M, --mock', 'Dont actually send the prompt to the API')
+	.action((options) => {
+		setOpts(options);
 	});
 
 program.parse();
