@@ -1,5 +1,3 @@
-# Basic Usage
-
 # SLLM
 A simple, light-weight command line interface for the GPT3 LLM.
 
