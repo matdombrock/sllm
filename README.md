@@ -6,7 +6,9 @@ In addition to providing a simple interface for talking with GPT3, this tool als
 ### Extra Features:
 - Act as a chat bot (emulates chatGPT)
 - Read local files
-- Automatically prepend subject domains (Bash, JS, Physics etc.)
+- Automatically prepend subject domains & context (Bash, JS, Physics etc.)
+- Expert Mode (act as an expert on some subject)
+- Explain it like I'm 5 (explain the answer simply)
 
 ### Why Not Use ChatGPT?
 You can do whatever you want :)
