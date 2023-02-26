@@ -1,6 +1,5 @@
 {
-  "expert": [
-    "webrtc"
-  ],
-  "verbose": true
+  "maxTokens": "256",
+  "temperature": "0.2",
+  "history": "3"
 }

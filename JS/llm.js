@@ -8,6 +8,8 @@ const { Configuration, OpenAIApi } = require("openai");
 const { Command } = require('commander'); // (normal include)
 
 
+const MAX_HISTORY_STORE = 64;
+
 // Ensure we have an api key env var
 if(!process.env.OPENAI_API_KEY){
     let err = 'ERROR: OPENAI_API_KEY unset\r\n';
@@ -36,6 +38,7 @@ async function run(prompt, options){
 	// Ensure numbers
 	options.maxTokens = Number(options.maxTokens) || 256;
 	options.temperature = Number(options.temperature) || 0.2;
+	options.history = Number(options.history) || 0;
 	
 	// Preproceess the prompt
 	if(options.context){
@@ -57,7 +60,7 @@ async function run(prompt, options){
 	// Append History
 	const ogPrompt = prompt;// Cache for history etc
 	if(options.history){
-		prompt = _loadHistory()
+		prompt = _loadHistory(options.history,false)// Revrsed
 			+prompt;	
 	}
 	
@@ -81,6 +84,7 @@ async function run(prompt, options){
 		console.log(JSON.stringify(options, null, 2));
 		console.log('Total Tokens Used: '+totalTokens);
 		console.log('Sending Prompt...');
+		console.log('-------\r\n');
 	}
 	
 	// Make the request
@@ -96,11 +100,12 @@ async function run(prompt, options){
 	}
 	// Strip dialog references
 	if(options.history){
-		prompt.replace('_user_: ','');
-		prompt.replace('_llm_: ','');
+		output = output.replace('_user_:','');
+		output = output.replace('_llm_:','');
 	}
+	// Trim whitesapce
+	output = output.trim();
 	// Log output
-	console.log('-------\r\n');
 	console.log(output);
 	
 	// Log history
@@ -124,22 +129,30 @@ function _logHistory(ogPrompt, output){
 		user: ogPrompt,
 		llm: output
 	};
-	const historyJSON = _loadHistory(true);
+	const historyJSON = _loadHistory(MAX_HISTORY_STORE, false, true);
 	historyJSON.push(histNew);
 	fs.writeFileSync(__dirname+'/history.json', JSON.stringify(historyJSON, null, 2));
 }
 
-function _loadHistory(json=false){
+function _loadHistory(count=1,reverse=true,json=false){
 	let content = fs.readFileSync(__dirname+'/history.json', 'UTF-8');
 	if(!content){
 		console.log('WARNING: Can not read history file!');	
 		content = '[]';
 	}
-	const historyJSON = JSON.parse(content) || [];
+	let historyJSON = JSON.parse(content) || [];
+	// Always reverse history first
+	historyJSON.reverse();
+	// Slice the history
+	historyJSON = historyJSON.slice(0, count);
+	// Undo reverse if needed
+	if(reverse===false){
+		historyJSON.reverse();
+	}
 	if(json){
 		// Return json
 		return historyJSON;
-	}
+	}	
 	let historyStr = '';
 	for(const item of historyJSON){
 		historyStr += '_user_: '+item.user;
@@ -157,12 +170,19 @@ function history(options){
 		return;
 	}
 	// Default to view
-	options.view = true;
 	if(options.view){
-		const content = _loadHistory();
+		// Ensure number
+		options.view = Number(options.view) || 32;
+		const content = _loadHistory(options.view, false);
 		console.log(content);
 		return;
 	}
+}
+
+function settings(){
+	const content = fs.readFileSync(__dirname+'/settings.json', 'UTF-8');
+	console.log(content);
+	console.log('Settings can be changed with the \`set\` command.');
 }
 
 function _loadOpts(options){
@@ -188,39 +208,47 @@ program
 program.command('prompt', {isDefault: true})
 	.description('Send a prompt (default command)')
 	.argument('<prompt...>', 'the prompt text')
-	.option('-m, --max-tokens <number>', 'maximum tokens to use')
-	.option('-t, --temperature <number>', 'temperature to use')
+	.option('-m, --max-tokens <number>', 'maximum tokens to use', '256')
+	.option('-t, --temperature <number>', 'temperature to use', '0.2')
 	.option('-c, --context <string...>', 'Context to prepend')
 	.option('-d, --domain <string...>', 'Subject domain to prepend')
 	.option('-e, --expert <string...>', 'Act as an expert on this domain')
-	.option('-H, --history', 'Prepend history (chatGPT mode)')
+	.option('-H, --history <number>', 'Prepend history (chatGPT mode)', '0')
 	.option('-v, --verbose', 'verbose output')
 	.option('-M, --mock', 'Dont actually send the prompt to the API')
 	.action((prompt, options) => {
 		run(prompt, options);
   	});
 
-program.command('hist')
-	.description('Manage the prompt/response history')
-	.option('-v, --view', 'View the prompt history')
-	.option('-d, --delete', 'Delete the prompt history')
-	.action((options) => {
-		history(options);
-	});
-
 program.command('set')
 	.description('Set a persistant command option')
-	.option('-m, --max-tokens <number>', 'maximum tokens to use')
-	.option('-t, --temperature <number>', 'temperature to use')
+	.option('-m, --max-tokens <number>', 'maximum tokens to use', '256')
+	.option('-t, --temperature <number>', 'temperature to use', '0.2')
 	.option('-c, --context <string...>', 'Context to prepend')
 	.option('-d, --domain <string...>', 'Subject domain to prepend')
 	.option('-e, --expert <string...>', 'Act as an expert on this domain')
-	.option('-H, --history', 'Prepend history (chatGPT mode)')
+	.option('-H, --history <number>', 'Prepend history (chatGPT mode)', '0')
 	.option('-v, --verbose', 'verbose output')
 	.option('-M, --mock', 'Dont actually send the prompt to the API')
 	.action((options) => {
 		setOpts(options);
 	});
+
+program.command('settings')
+	.description('View the current settings that were changed via the \`set\` command.')
+	.action(() =>{
+		settings()
+	});
+
+program.command('hist')
+	.description('Manage the prompt/response history')
+	.option('-v, --view <number>', 'View the prompt history', '8')
+	.option('-d, --delete', 'Delete the prompt history')
+	.action((options) => {
+		history(options);
+	});
+
+
 
 program.parse();
 
