@@ -191,8 +191,14 @@ function history(options){
 	}
 }
 
-function settings(){
-	const content = fs.readFileSync(__dirname+'/settings.json', 'UTF-8');
+function settings(options){
+	let content;
+	if(options.delete){
+		content = 'Deleted Settings';
+	}
+	else{
+		content = fs.readFileSync(__dirname+'/settings.json', 'UTF-8');
+	}
 	console.log(content);
 	console.log('Settings can be changed with the \`set\` command.');
 }
@@ -200,7 +206,7 @@ function settings(){
 function _loadOpts(options){
 	const content = fs.readFileSync(__dirname+'/settings.json', 'UTF-8');
 	const optJSON = JSON.parse(content);
-	options = Object.assign(options, optJSON);
+	options = Object.assign(optJSON, options);
 	return options;
 }
 
@@ -256,8 +262,9 @@ program.command('set')
 
 program.command('settings')
 	.description('View the current settings that were changed via the \`set\` command.')
-	.action(() =>{
-		settings()
+	.option('-d, --delete', 'Delete the current settings')
+	.action((options) =>{
+		settings(options);
 	});
 
 program.command('hist')
