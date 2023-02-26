@@ -8,11 +8,22 @@ In addition to providing a simple interface for talking with GPT3, this tool als
 - Read local files
 - Automatically prepend subject domains (Bash, JS, Physics etc.)
 
+### Why Not Use chatGPT?
+You can do whatever you want :)
+
+I made this for the following reasons:
+
+- Access GPT3 without leaving the command line
+- Access GPT3 without logging in to OpenAI (use a token instead)
+- I don't always have easy access to a GUI
+
 > $ sllm what would be the avantage of talking to a LLM via the command line?
 > 
 > The advantage of talking to a LLM via the command line is that it allows for a more efficient and direct way of communicating. It also allows for more precise and specific commands to be used, which can help to quickly get the desired results.
 
 ---
+
+### Example Usage:
 
 > $ sllm what can be used to check the status of a running systemd service? -e bash scripting
 > 
