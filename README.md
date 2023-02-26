@@ -1,5 +1,5 @@
 # SLLM
-A simple, light-weight command line interface for the GPT3 LLM.
+A command line interface for the GPT3 LLM.
 
 In addition to providing a simple interface for talking with GPT3, this tool also offers a few extra features built on top of the GPT3 API. 
 
