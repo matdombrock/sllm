@@ -8,7 +8,7 @@ In addition to providing a simple interface for talking with GPT3, this tool als
 - Read local files
 - Automatically prepend subject domains (Bash, JS, Physics etc.)
 
-### Why Not Use chatGPT?
+### Why Not Use ChatGPT?
 You can do whatever you want :)
 
 I made this for the following reasons:
