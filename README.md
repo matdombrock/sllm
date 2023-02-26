@@ -2,9 +2,12 @@
 A simple, light-weight command line interface for the GPT3 LLM.
 
 > $ sllm what bash command can be used to check the status of a running systemd service?
+> 
 > The command to check the status of a running systemd service is "systemctl status <service_name>".
->
+> 
+> 
 > $ sllm how can I get the full log instead?
+> 
 > To get the full log of a running systemd service, you can use the command "journalctl -u <service_name>".
 
 
