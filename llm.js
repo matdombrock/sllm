@@ -54,6 +54,10 @@ async function run(prompt, options){
 	}
 	
 	// Preproceess the prompt
+	if(options.likeImFive){
+		prompt = 'Answer this as if I\'m five years old: '
+			+prompt;
+	}
 	if(options.context){
 		prompt = 'In the context of '
 			+options.context.join(' ')
@@ -258,7 +262,7 @@ const program = new Command();
 program
   .name('sllm')
   .description('CLI for GPT3. Created by Mathieu Dombrock 2023. GPL3 License.')
-  .version('0.8.3');
+  .version('0.8.4');
 
 program.command('prompt', {isDefault: true})
 	.description('Send a prompt (default command)')
@@ -268,6 +272,7 @@ program.command('prompt', {isDefault: true})
 	.option('-c, --context <string...>', 'Context to prepend')
 	.option('-d, --domain <string...>', 'Subject domain to prepend')
 	.option('-e, --expert <string...>', 'Act as an expert on this domain')
+	.option('-5, --like-im-five', 'Explain it like I\'m 5 years old')
 	.option('-H, --history <number>', 'Prepend history (chatGPT mode)')
 	.option('-f, --file <path>', 'Preprend the given file contents')
 	.option('-v, --verbose', 'verbose output')
@@ -283,6 +288,7 @@ program.command('set')
 	.option('-c, --context <string...>', 'Context to prepend')
 	.option('-d, --domain <string...>', 'Subject domain to prepend')
 	.option('-e, --expert <string...>', 'Act as an expert on this domain')
+	.option('-5, --like-im-five', 'Explain it like I\'m 5 years old')
 	.option('-H, --history <number>', 'Prepend history (chatGPT mode)')
 	.option('-f, --file <path>', 'Preprend the given file contents')
 	.option('-v, --verbose', 'verbose output')
