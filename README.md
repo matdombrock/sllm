@@ -1,18 +1,25 @@
 # SLLM
 A simple, light-weight command line interface for the GPT3 LLM.
 
+In addition to providing a simple interface for talking with GPT3, this tool also offers a few extra features built on top of the GPT3 API. 
+
+### Extra Features:
+- Act as a chat bot (emulates chatGPT)
+- Read local files
+- Automatically prepend subject domains (Bash, JS, Physics etc.)
+
 > $ sllm what would be the avantage of talking to a LLM via the command line?
 > 
 > The advantage of talking to a LLM via the command line is that it allows for a more efficient and direct way of communicating. It also allows for more precise and specific commands to be used, which can help to quickly get the desired results.
 
 ---
 
-> $ sllm what bash command can be used to check the status of a running systemd service?
+> $ sllm what can be used to check the status of a running systemd service? -e bash scripting
 > 
 > The command to check the status of a running systemd service is "systemctl status <service_name>".
 > 
 > 
-> $ sllm how can I get the full log instead?
+> $ sllm how can I get the full log instead? -d bash -H 1
 > 
 > To get the full log of a running systemd service, you can use the command "journalctl -u <service_name>".
 

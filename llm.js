@@ -194,6 +194,7 @@ function history(options){
 function settings(options){
 	let content;
 	if(options.delete){
+		fs.rmSync(__dirname+'/settings.json');
 		content = 'Deleted Settings';
 	}
 	else{
@@ -237,7 +238,7 @@ program.command('prompt', {isDefault: true})
 	.option('-c, --context <string...>', 'Context to prepend')
 	.option('-d, --domain <string...>', 'Subject domain to prepend')
 	.option('-e, --expert <string...>', 'Act as an expert on this domain')
-	.option('-H, --history <number>', 'Prepend history (chatGPT mode)', '0')
+	.option('-H, --history <number>', 'Prepend history (chatGPT mode)')
 	.option('-f, --file <path>', 'Preprend the given file contents')
 	.option('-v, --verbose', 'verbose output')
 	.option('-M, --mock', 'Dont actually send the prompt to the API')
@@ -252,7 +253,7 @@ program.command('set')
 	.option('-c, --context <string...>', 'Context to prepend')
 	.option('-d, --domain <string...>', 'Subject domain to prepend')
 	.option('-e, --expert <string...>', 'Act as an expert on this domain')
-	.option('-H, --history <number>', 'Prepend history (chatGPT mode)', '0')
+	.option('-H, --history <number>', 'Prepend history (chatGPT mode)')
 	.option('-f, --file <path>', 'Preprend the given file contents')
 	.option('-v, --verbose', 'verbose output')
 	.option('-M, --mock', 'Dont actually send the prompt to the API')
