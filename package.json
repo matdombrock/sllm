@@ -1,6 +1,6 @@
 {
-  "name": "llm",
-  "version": "1.0.0",
+  "name": "sllm",
+  "version": "0.8.i",
   "description": "",
   "main": "llm.js",
   "scripts": {

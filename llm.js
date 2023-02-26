@@ -2,6 +2,10 @@
 
 const fs = require('fs');
 
+// import os module
+const os = require("os");
+const userHomeDir = os.homedir()+'/.sllm';
+
 const { encode, decode } = require('gpt-3-encoder');
 
 const { Configuration, OpenAIApi } = require("openai");
@@ -126,13 +130,17 @@ async function run(prompt, options){
 
 
 function _ensureFiles(){
-	if(!fs.existsSync(__dirname+'/history.json')){
-		// Create the file
-		fs.writeFileSync(__dirname+'/history.json', '[]');
+	if(!fs.existsSync(userHomeDir)){
+		// Create the dir
+		fs.mkdirSync(userHomeDir);
 	}
-	if(!fs.existsSync(__dirname+'/settings.json')){
+	if(!fs.existsSync(userHomeDir+'/history.json')){
 		// Create the file
-		fs.writeFileSync(__dirname+'/settings.json', '{}');
+		fs.writeFileSync(userHomeDir+'/history.json', '[]');
+	}
+	if(!fs.existsSync(userHomeDir+'/settings.json')){
+		// Create the file
+		fs.writeFileSync(userHomeDir+'/settings.json', '{}');
 	}
 }
 
@@ -143,11 +151,11 @@ function _logHistory(ogPrompt, output){
 	};
 	const historyJSON = _loadHistory(MAX_HISTORY_STORE, false, true);
 	historyJSON.push(histNew);
-	fs.writeFileSync(__dirname+'/history.json', JSON.stringify(historyJSON, null, 2));
+	fs.writeFileSync(userHomeDir+'/history.json', JSON.stringify(historyJSON, null, 2));
 }
 
 function _loadHistory(count=1,reverse=true,json=false){
-	let content = fs.readFileSync(__dirname+'/history.json', 'UTF-8');
+	let content = fs.readFileSync(userHomeDir+'/history.json', 'UTF-8');
 	if(!content){
 		console.log('WARNING: Can not read history file!');	
 		content = '[]';
@@ -177,7 +185,7 @@ function _loadHistory(count=1,reverse=true,json=false){
 
 function history(options){
 	if(options.delete){
-		fs.rmSync(__dirname+'/history.json');
+		fs.rmSync(userHomeDir+'/history.json');
 		console.log('Deleted History');
 		return;
 	}
@@ -194,18 +202,18 @@ function history(options){
 function settings(options){
 	let content;
 	if(options.delete){
-		fs.rmSync(__dirname+'/settings.json');
+		fs.rmSync(userHomeDir+'/settings.json');
 		content = 'Deleted Settings';
 	}
 	else{
-		content = fs.readFileSync(__dirname+'/settings.json', 'UTF-8');
+		content = fs.readFileSync(userHomeDir+'/settings.json', 'UTF-8');
 	}
 	console.log(content);
 	console.log('Settings can be changed with the \`set\` command.');
 }
 
 function _loadOpts(options){
-	const content = fs.readFileSync(__dirname+'/settings.json', 'UTF-8');
+	const content = fs.readFileSync(userHomeDir+'/settings.json', 'UTF-8');
 	const optJSON = JSON.parse(content);
 	options = Object.assign(optJSON, options);
 	return options;
@@ -213,13 +221,13 @@ function _loadOpts(options){
 
 function setOpts(options){
 	console.log(JSON.stringify(options));
-	fs.writeFileSync(__dirname+'/settings.json', JSON.stringify(options, null, 2));
+	fs.writeFileSync(userHomeDir+'/settings.json', JSON.stringify(options, null, 2));
 	console.log('Created a new settings file');
 }
 
 function purge(){
-	fs.rmSync(__dirname+'/settings.json');
-	fs.rmSync(__dirname+'/history.json');
+	fs.rmSync(userHomeDir+'/settings.json');
+	fs.rmSync(userHomeDir+'/history.json');
 	console.log('Purged!');
 }
 
@@ -228,7 +236,7 @@ const program = new Command();
 program
   .name('sllm')
   .description('CLI for GPT3. Created by Mathieu Dombrock 2023. GPL3 License.')
-  .version('0.8.0');
+  .version('0.8.1');
 
 program.command('prompt', {isDefault: true})
 	.description('Send a prompt (default command)')
