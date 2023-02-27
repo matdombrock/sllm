@@ -216,6 +216,11 @@ function history(options){
 	}
 }
 
+function repeat(){
+	const last = _loadHistory(1, true, true);
+	console.log(last[0].llm);
+}
+
 function settings(options){
 	let content;
 	if(options.delete){
@@ -338,6 +343,12 @@ program.command('count')
 	.action((options)=>{
 		countTokens(options);
 	});
+
+program.command('repeat')
+      .description('repeat the last response')
+      .action(() => {
+		repeat();
+      });
 
 program.parse();
 
