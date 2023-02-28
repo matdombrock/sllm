@@ -24,7 +24,7 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
-async function run(prompt, options){
+async function llm(prompt, options){
 	// Join prompt into single string
 	prompt = prompt.join(' ');
 	
@@ -134,6 +134,78 @@ async function run(prompt, options){
 }
 
 
+
+
+function history(options){
+	if(options.delete){
+		fs.rmSync(USER_CFG_DIR+'/history.json');
+		console.log('Deleted History');
+		return;
+	}
+	// Default to view
+	if(options.view){
+		// Ensure number
+		options.view = Number(options.view) || 32;
+		const content = _loadHistory(options.view, false);
+		console.log(content);
+		return;
+	}
+}
+
+function repeat(){
+	const last = _loadHistory(1, true, true);
+	console.log(last[0].llm);
+}
+
+function settings(options){
+	let content;
+	if(options.delete){
+		fs.rmSync(USER_CFG_DIR+'/settings.json');
+		content = 'Deleted Settings';
+	}
+	else{
+		content = fs.readFileSync(USER_CFG_DIR+'/settings.json', 'UTF-8');
+	}
+	console.log(content);
+	console.log('Settings can be changed with the \`set\` command.');
+}
+
+
+
+function setOpts(options){
+	console.log(JSON.stringify(options));
+	fs.writeFileSync(USER_CFG_DIR+'/settings.json', JSON.stringify(options, null, 2));
+	console.log('Created a new settings file');
+}
+
+function purge(){
+	fs.rmSync(USER_CFG_DIR+'/settings.json');
+	fs.rmSync(USER_CFG_DIR+'/history.json');
+	console.log('Purged!');
+}
+
+function countTokens(options){
+	let tokens = 0;
+	if(options.prompt){
+		options.prompt = options.prompt.join(' ');
+		const encoded = encode(options.prompt);
+		tokens += encoded.length;
+	}
+	if(options.file){
+		const contents = fs.readFileSync(options.file, 'UTF-8');
+		const encoded = encode(contents);
+		tokens += encoded.length;
+	}
+	if(tokens === 0){
+		console.log('ERROR: Nothing to count');
+		console.log('Use the --prompt or --file options!');
+		return;
+	}
+
+	console.log('Estimated Tokens: '+tokens+'/'+'4096');
+	console.log('Max Reply: '+(4096-tokens));
+}
+
 function _ensureFiles(){
 	if(!fs.existsSync(USER_CFG_DIR)){
 		// Create the dir
@@ -158,6 +230,13 @@ function _ensureAPIKey(){
 	    console.log(err);
 	    process.exit();
 	}	
+}
+
+function _loadOpts(options){
+	const content = fs.readFileSync(USER_CFG_DIR+'/settings.json', 'UTF-8');
+	const optJSON = JSON.parse(content);
+	options = Object.assign(optJSON, options);
+	return options;
 }
 
 function _logHistory(ogPrompt, output){
@@ -199,81 +278,6 @@ function _loadHistory(count=1,reverse=true,json=false){
 	return historyStr;
 }
 
-function history(options){
-	if(options.delete){
-		fs.rmSync(USER_CFG_DIR+'/history.json');
-		console.log('Deleted History');
-		return;
-	}
-	// Default to view
-	if(options.view){
-		// Ensure number
-		options.view = Number(options.view) || 32;
-		const content = _loadHistory(options.view, false);
-		console.log(content);
-		return;
-	}
-}
-
-function repeat(){
-	const last = _loadHistory(1, true, true);
-	console.log(last[0].llm);
-}
-
-function settings(options){
-	let content;
-	if(options.delete){
-		fs.rmSync(USER_CFG_DIR+'/settings.json');
-		content = 'Deleted Settings';
-	}
-	else{
-		content = fs.readFileSync(USER_CFG_DIR+'/settings.json', 'UTF-8');
-	}
-	console.log(content);
-	console.log('Settings can be changed with the \`set\` command.');
-}
-
-function _loadOpts(options){
-	const content = fs.readFileSync(USER_CFG_DIR+'/settings.json', 'UTF-8');
-	const optJSON = JSON.parse(content);
-	options = Object.assign(optJSON, options);
-	return options;
-}
-
-function setOpts(options){
-	console.log(JSON.stringify(options));
-	fs.writeFileSync(USER_CFG_DIR+'/settings.json', JSON.stringify(options, null, 2));
-	console.log('Created a new settings file');
-}
-
-function purge(){
-	fs.rmSync(USER_CFG_DIR+'/settings.json');
-	fs.rmSync(USER_CFG_DIR+'/history.json');
-	console.log('Purged!');
-}
-
-function countTokens(options){
-	let tokens = 0;
-	if(options.prompt){
-		options.prompt = options.prompt.join(' ');
-		const encoded = encode(options.prompt);
-		tokens += encoded.length;
-	}
-	if(options.file){
-		const contents = fs.readFileSync(options.file, 'UTF-8');
-		const encoded = encode(contents);
-		tokens += encoded.length;
-	}
-	if(tokens === 0){
-		console.log('ERROR: Nothing to count');
-		console.log('Use the --prompt or --file options!');
-		return;
-	}
-
-	console.log('Estimated Tokens: '+tokens+'/'+'4096');
-	console.log('Max Reply: '+(4096-tokens));
-}
-
 const program = new Command();
 
 program
@@ -295,7 +299,7 @@ program.command('prompt', {isDefault: true})
 	.option('-v, --verbose', 'verbose output')
 	.option('-M, --mock', 'dont actually send the prompt to the API')
 	.action((prompt, options) => {
-		run(prompt, options);
+		llm(prompt, options);
   	});
 
 program.command('set')
