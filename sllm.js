@@ -1,17 +1,19 @@
 #! /usr/bin/env node
 
 const fs = require('fs');
-const os = require("os");
-const { encode, decode } = require('gpt-3-encoder');
-const { Configuration, OpenAIApi } = require("openai");
+const os = require('os');
+const { encode } = require('gpt-3-encoder');
+const { Configuration, OpenAIApi } = require('openai');
 const { Command } = require('commander'); // (normal include)
 
-const USER_CFG_DIR = os.homedir()+'/.config/sllm';
+const USER_CFG_DIR = os.homedir() + '/.config/sllm';
 
 const MAX_HISTORY_STORE = 64;
 
 // Read package.json version number
-const VERSION_NUMBER = JSON.parse(fs.readFileSync(__dirname+'/package.json')).version;
+const VERSION_NUMBER = JSON.parse(
+	fs.readFileSync(__dirname + '/package.json')
+).version;
 
 // Ensure we have an api key env var
 _ensureAPIKey();
@@ -24,10 +26,10 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
-async function llm(prompt, options){
+async function llm(prompt, options) {
 	// Join prompt into single string
 	prompt = prompt.join(' ');
-	
+
 	// Set static options
 	options = _loadOpts(options);
 
@@ -37,113 +39,109 @@ async function llm(prompt, options){
 	options.history = Number(options.history) || 0;
 
 	// Prepend a file if required
-	if(options.file){
-		if(fs.existsSync(options.file)){
-			prompt = fs.readFileSync(options.file, 'UTF-8')
-				+'\r\n'
-				+'Consider the previous file contents when responding to the prompt: '
-				+prompt;
+	if (options.file) {
+		if (fs.existsSync(options.file)) {
+			prompt =
+				fs.readFileSync(options.file, 'UTF-8') +
+				'\r\n' +
+				'Consider the previous file contents when responding to the prompt: ' +
+				prompt;
 		}
 	}
-	
+
 	// Preproceess the prompt
-	if(options.likeImFive){
-		prompt = 'Answer this as if I\'m five years old: '
-			+prompt;
+	if (options.likeImFive) {
+		prompt = 'Answer this as if I\'m five years old: ' + prompt;
 	}
-	if(options.context){
-		prompt = 'In the context of '
-			+options.context.join(' ')
-			+', '+prompt;
+	if (options.context) {
+		prompt =
+			'In the context of ' + options.context.join(' ') + ', ' + prompt;
 	}
-	if(options.domain){
-		prompt = 'In the domain of '
-			+options.domain.join(' ')
-			+', '+prompt;
+	if (options.domain) {
+		prompt = 'In the domain of ' + options.domain.join(' ') + ', ' + prompt;
 	}
-	if(options.expert){
-		prompt = 'Act as an expert on '
-			+options.expert.join(' ')
-			+'. The question I need you to answer is: '+prompt;
+	if (options.expert) {
+		prompt =
+			'Act as an expert on ' +
+			options.expert.join(' ') +
+			'. The question I need you to answer is: ' +
+			prompt;
 	}
-	
+
 	// Append History
-	const ogPrompt = prompt;// Cache for history etc
-	if(options.history){
-		prompt = _loadHistory(options.history,false)// Revrsed
-			+prompt;	
+	const ogPrompt = prompt; // Cache for history etc
+	if (options.history) {
+		prompt =
+			_loadHistory(options.history, false) + // Revrsed
+			prompt;
 	}
-	
+
 	// Count total prompt tokens and append to the maxTokens value
 	const encoded = encode(prompt);
 	const tokenCount = encoded.length;
-	const totalTokens = options.maxTokens + tokenCount;	
+	const totalTokens = options.maxTokens + tokenCount;
 
 	// Apply verbos outout
-	if(options.verbose){
-		console.log('>> '+ogPrompt+' <<');
+	if (options.verbose) {
+		console.log('>> ' + ogPrompt + ' <<');
 		console.log(JSON.stringify(options, null, 2));
-		console.log('Encoded Tokens: '+encoded.length);
-		console.log('Total Potential Tokens: '+totalTokens);
+		console.log('Encoded Tokens: ' + encoded.length);
+		console.log('Total Potential Tokens: ' + totalTokens);
 		console.log('Sending Prompt...');
 		console.log('-------\r\n');
 	}
 
 	// GPT can use a total of 4096 tokens at once
 	// Using 4k for the prompt allows us 96 for response
-	if(totalTokens > 4000){
-		console.log('ERROR: Max Tokens Exceeded '+'('+totalTokens+')');
+	if (totalTokens > 4000) {
+		console.log('ERROR: Max Tokens Exceeded ' + '(' + totalTokens + ')');
 		console.log('Please limit your prompt');
-		if(options.history){
+		if (options.history) {
 			console.log('Trying running with history off!');
-		};
+		}
 		return;
 	}
-	
+
 	// Make the request
 	let output = 'WARNING: Did not send!';
-	if(!options.mock){
+	if (!options.mock) {
 		const completion = await openai.createCompletion({
-  			model: "text-davinci-003",
-  			prompt: prompt,
+			model: 'text-davinci-003',
+			prompt: prompt,
 			max_tokens: options.maxTokens,
-        		temperature: options.temperature
+			temperature: options.temperature,
 		});
 		output = completion.data.choices[0].text;
 	}
 
 	// Strip dialog references
-	if(options.history){
-		output = output.replace('_user_:','');
-		output = output.replace('_llm_:','');
+	if (options.history) {
+		output = output.replace('_user_:', '');
+		output = output.replace('_llm_:', '');
 	}
 
 	// Check for empty response
-	if(output.length < 1){
-		output = "WARNING: Something went wrong! Try Again."
+	if (output.length < 1) {
+		output = 'WARNING: Something went wrong! Try Again.';
 	}
-	
 
 	// Trim whitesapce
 	output = output.trim();
 	// Log output
 	console.log(output);
-	
+
 	// Log history
 	_logHistory(ogPrompt, output);
 }
 
-
-
-
-function history(options){
-	if(options.delete){
-		fs.rmSync(USER_CFG_DIR+'/history.json');
+function history(options) {
+	if (options.delete) {
+		fs.rmSync(USER_CFG_DIR + '/history.json');
 		console.log('Deleted History');
 		return;
 	}
 	// Default to view
-	if(options.view){
+	if (options.view) {
 		// Ensure number
 		options.view = Number(options.view) || 32;
 		const content = _loadHistory(options.view, false);
@@ -152,107 +150,110 @@ function history(options){
 	}
 }
 
-function repeat(){
+function repeat() {
 	const last = _loadHistory(1, true, true);
 	console.log(last[0].llm);
 }
 
-function settings(options){
+function settings(options) {
 	let content;
-	if(options.delete){
-		fs.rmSync(USER_CFG_DIR+'/settings.json');
+	if (options.delete) {
+		fs.rmSync(USER_CFG_DIR + '/settings.json');
 		content = 'Deleted Settings';
-	}
-	else{
-		content = fs.readFileSync(USER_CFG_DIR+'/settings.json', 'UTF-8');
+	} else {
+		content = fs.readFileSync(USER_CFG_DIR + '/settings.json', 'UTF-8');
 	}
 	console.log(content);
-	console.log('Settings can be changed with the \`set\` command.');
+	console.log('Settings can be changed with the `set` command.');
 }
 
-
-
-function setOpts(options){
+function setOpts(options) {
 	console.log(JSON.stringify(options));
-	fs.writeFileSync(USER_CFG_DIR+'/settings.json', JSON.stringify(options, null, 2));
+	fs.writeFileSync(
+		USER_CFG_DIR + '/settings.json',
+		JSON.stringify(options, null, 2)
+	);
 	console.log('Created a new settings file');
 }
 
-function purge(){
-	fs.rmSync(USER_CFG_DIR+'/settings.json');
-	fs.rmSync(USER_CFG_DIR+'/history.json');
+function purge() {
+	fs.rmSync(USER_CFG_DIR + '/settings.json');
+	fs.rmSync(USER_CFG_DIR + '/history.json');
 	console.log('Purged!');
 }
 
-function countTokens(options){
+function countTokens(options) {
 	let tokens = 0;
-	if(options.prompt){
+	if (options.prompt) {
 		options.prompt = options.prompt.join(' ');
 		const encoded = encode(options.prompt);
 		tokens += encoded.length;
 	}
-	if(options.file){
+	if (options.file) {
 		const contents = fs.readFileSync(options.file, 'UTF-8');
 		const encoded = encode(contents);
 		tokens += encoded.length;
 	}
-	if(tokens === 0){
+	if (tokens === 0) {
 		console.log('ERROR: Nothing to count');
 		console.log('Use the --prompt or --file options!');
 		return;
 	}
 
-	console.log('Estimated Tokens: '+tokens+'/'+'4096');
-	console.log('Max Reply: '+(4096-tokens));
+	console.log('Estimated Tokens: ' + tokens + '/' + '4096');
+	console.log('Max Reply: ' + (4096 - tokens));
 }
 
-function _ensureFiles(){
-	if(!fs.existsSync(USER_CFG_DIR)){
+function _ensureFiles() {
+	if (!fs.existsSync(USER_CFG_DIR)) {
 		// Create the dir
 		fs.mkdirSync(USER_CFG_DIR);
 	}
-	if(!fs.existsSync(USER_CFG_DIR+'/history.json')){
+	if (!fs.existsSync(USER_CFG_DIR + '/history.json')) {
 		// Create the file
-		fs.writeFileSync(USER_CFG_DIR+'/history.json', '[]');
+		fs.writeFileSync(USER_CFG_DIR + '/history.json', '[]');
 	}
-	if(!fs.existsSync(USER_CFG_DIR+'/settings.json')){
+	if (!fs.existsSync(USER_CFG_DIR + '/settings.json')) {
 		// Create the file
-		fs.writeFileSync(USER_CFG_DIR+'/settings.json', '{}');
+		fs.writeFileSync(USER_CFG_DIR + '/settings.json', '{}');
 	}
 }
 
-function _ensureAPIKey(){
-	if(!process.env.OPENAI_API_KEY){
-	    let err = 'ERROR: OPENAI_API_KEY unset\r\n';
-	    err += 'To set, use the command:\r\n'; 
-	    err += 'export OPENAI_API_KEY=<your_key>\r\n';
-	    err += 'https://platform.openai.com/account/api-keys';
-	    console.log(err);
-	    process.exit();
-	}	
+function _ensureAPIKey() {
+	if (!process.env.OPENAI_API_KEY) {
+		let err = 'ERROR: OPENAI_API_KEY unset\r\n';
+		err += 'To set, use the command:\r\n';
+		err += 'export OPENAI_API_KEY=<your_key>\r\n';
+		err += 'https://platform.openai.com/account/api-keys';
+		console.log(err);
+		process.exit();
+	}
 }
 
-function _loadOpts(options){
-	const content = fs.readFileSync(USER_CFG_DIR+'/settings.json', 'UTF-8');
+function _loadOpts(options) {
+	const content = fs.readFileSync(USER_CFG_DIR + '/settings.json', 'UTF-8');
 	const optJSON = JSON.parse(content);
 	options = Object.assign(optJSON, options);
 	return options;
 }
 
-function _logHistory(ogPrompt, output){
+function _logHistory(ogPrompt, output) {
 	const histNew = {
 		user: ogPrompt,
-		llm: output
+		llm: output,
 	};
 	const historyJSON = _loadHistory(MAX_HISTORY_STORE, false, true);
 	historyJSON.push(histNew);
-	fs.writeFileSync(USER_CFG_DIR+'/history.json', JSON.stringify(historyJSON, null, 2));
+	fs.writeFileSync(
+		USER_CFG_DIR + '/history.json',
+		JSON.stringify(historyJSON, null, 2)
+	);
 }
 
-function _loadHistory(count=1,reverse=true,json=false){
-	let content = fs.readFileSync(USER_CFG_DIR+'/history.json', 'UTF-8');
-	if(!content){
-		console.log('WARNING: Can not read history file!');	
+function _loadHistory(count = 1, reverse = true, json = false) {
+	let content = fs.readFileSync(USER_CFG_DIR + '/history.json', 'UTF-8');
+	if (!content) {
+		console.log('WARNING: Can not read history file!');
 		content = '[]';
 	}
 	let historyJSON = JSON.parse(content) || [];
@@ -261,18 +262,18 @@ function _loadHistory(count=1,reverse=true,json=false){
 	// Slice the history
 	historyJSON = historyJSON.slice(0, count);
 	// Undo reverse if needed
-	if(reverse===false){
+	if (reverse === false) {
 		historyJSON.reverse();
 	}
-	if(json){
+	if (json) {
 		// Return json
 		return historyJSON;
-	}	
+	}
 	let historyStr = '';
-	for(const item of historyJSON){
-		historyStr += '_user_: '+item.user;
+	for (const item of historyJSON) {
+		historyStr += '_user_: ' + item.user;
 		historyStr += '\r\n';
-		historyStr += '_llm_: '+item.llm;
+		historyStr += '_llm_: ' + item.llm;
 		historyStr += '\r\n';
 	}
 	return historyStr;
@@ -281,11 +282,14 @@ function _loadHistory(count=1,reverse=true,json=false){
 const program = new Command();
 
 program
-  	.name('sllm')
-  	.description('CLI for GPT3. Created by Mathieu Dombrock 2023. GPL3 License.')
-  	.version(VERSION_NUMBER);
+	.name('sllm')
+	.description(
+		'CLI for GPT3. Created by Mathieu Dombrock 2023. GPL3 License.'
+	)
+	.version(VERSION_NUMBER);
 
-program.command('prompt', {isDefault: true})
+program
+	.command('prompt', { isDefault: true })
 	.description('send a prompt (default command)')
 	.argument('<prompt...>', 'the prompt text')
 	.option('-m, --max-tokens <number>', 'maximum tokens to use', '256')
@@ -300,9 +304,10 @@ program.command('prompt', {isDefault: true})
 	.option('-M, --mock', 'dont actually send the prompt to the API')
 	.action((prompt, options) => {
 		llm(prompt, options);
-  	});
+	});
 
-program.command('set')
+program
+	.command('set')
 	.description('set a persistant command option')
 	.option('-m, --max-tokens <number>', 'maximum tokens to use', '256')
 	.option('-t, --temperature <number>', 'temperature to use', '0.2')
@@ -318,14 +323,18 @@ program.command('set')
 		setOpts(options);
 	});
 
-program.command('settings')
-	.description('view the current settings that were changed via the \`set\` command')
+program
+	.command('settings')
+	.description(
+		'view the current settings that were changed via the `set` command'
+	)
 	.option('-d, --delete', 'Delete the current settings')
-	.action((options) =>{
+	.action((options) => {
 		settings(options);
 	});
 
-program.command('hist')
+program
+	.command('hist')
 	.description('manage the prompt / response history')
 	.option('-v, --view <number>', 'view the prompt history', '8')
 	.option('-d, --delete', 'delete the prompt history')
@@ -333,26 +342,27 @@ program.command('hist')
 		history(options);
 	});
 
-program.command('purge')
+program
+	.command('purge')
 	.description('delete all history and settings')
-	.action(()=>{
+	.action(() => {
 		purge();
 	});
 
-program.command('count')
+program
+	.command('count')
 	.description('estimate the tokens used by a prompt or file')
 	.option('-p, --prompt <string...>', 'the prompt string to check')
 	.option('-f, --file <path>', 'the file path to check')
-	.action((options)=>{
+	.action((options) => {
 		countTokens(options);
 	});
 
-program.command('repeat')
-      .description('repeat the last response')
-      .action(() => {
+program
+	.command('repeat')
+	.description('repeat the last response')
+	.action(() => {
 		repeat();
-      });
+	});
 
 program.parse();
-
-
