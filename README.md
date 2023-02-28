@@ -88,6 +88,7 @@ Commands:
   hist [options]                manage the prompt / response history
   purge                         delete all history and settings
   count [options]               estimate the tokens used by a prompt or file
+  repeat                        repeat the last response
   help [command]                display help for command
 
 ```
