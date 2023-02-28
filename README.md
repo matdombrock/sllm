@@ -17,6 +17,7 @@ I made this for the following reasons:
 
 - Access GPT3 without leaving the command line
 - Access GPT3 without logging in to OpenAI (use a token instead)
+- Directly read and write local files
 - I don't always have easy access to a GUI
 
 > $ sllm what would be the avantage of talking to a LLM via the command line?
@@ -66,7 +67,7 @@ To enable a "chat mode" similar to chatGPT, run the following command:
 sllm set -H 3
 ```
 
-This will remind the LLM about the last 4 prompts it was given. 
+This will remind the LLM about the last 3 prompts it was given. 
 
 ## Overview
 ```
@@ -152,3 +153,22 @@ $ sllm what is this file about? -f mute.cpp
 $ sllm what is this file about? -f cfg.txt
   This file is about creating a GIF animation of Conway's Game of Life using the .sorg settings. The animation will have a file name of "life", a frame delay of 1, 512 frames to render, 0 generations to run before render, a canvas width of 64, a canvas height of 64, a pixel/image scale of 8, a gif color pallet of lime, and a rule set of dtsd. Additionally, the .sorg settings include a file to load of "noise", a center of 0, an x offset of 1, and a y offset of 1.
 ```
+
+## Counting Tokens
+
+If you want to estimate how many tokens a prompt or file will consume, you can use the `sllm count` command.
+
+```
+$ sllm help count
+
+Usage: sllm count [options]
+
+estimate the tokens used by a prompt or file
+
+Options:
+  -p, --prompt <string...>  the prompt string to check
+  -f, --file <path>         the file path to check
+  -h, --help                display help for command
+```
+
+
