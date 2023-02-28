@@ -14,14 +14,7 @@ const MAX_HISTORY_STORE = 64;
 const VERSION_NUMBER = JSON.parse(fs.readFileSync(__dirname+'/package.json')).version;
 
 // Ensure we have an api key env var
-if(!process.env.OPENAI_API_KEY){
-    let err = 'ERROR: OPENAI_API_KEY unset\r\n';
-    err += 'To set, use the command:\r\n'; 
-    err += 'export OPENAI_API_KEY=<your_key>\r\n';
-    err += 'https://platform.openai.com/account/api-keys';
-    console.log(err);
-    process.exit();
-}
+_ensureAPIKey();
 // Ensure we have our needed files
 _ensureFiles();
 
@@ -154,6 +147,17 @@ function _ensureFiles(){
 		// Create the file
 		fs.writeFileSync(USER_CFG_DIR+'/settings.json', '{}');
 	}
+}
+
+function _ensureAPIKey(){
+	if(!process.env.OPENAI_API_KEY){
+	    let err = 'ERROR: OPENAI_API_KEY unset\r\n';
+	    err += 'To set, use the command:\r\n'; 
+	    err += 'export OPENAI_API_KEY=<your_key>\r\n';
+	    err += 'https://platform.openai.com/account/api-keys';
+	    console.log(err);
+	    process.exit();
+	}	
 }
 
 function _logHistory(ogPrompt, output){
