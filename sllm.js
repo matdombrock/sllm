@@ -1,17 +1,12 @@
 #! /usr/bin/env node
 
 const fs = require('fs');
-
-// import os module
 const os = require("os");
-const userHomeDir = os.homedir()+'/.sllm';
-
 const { encode, decode } = require('gpt-3-encoder');
-
 const { Configuration, OpenAIApi } = require("openai");
-
 const { Command } = require('commander'); // (normal include)
 
+const USER_CFG_DIR = os.homedir()+'/.sllm';
 
 const MAX_HISTORY_STORE = 64;
 
@@ -147,17 +142,17 @@ async function run(prompt, options){
 
 
 function _ensureFiles(){
-	if(!fs.existsSync(userHomeDir)){
+	if(!fs.existsSync(USER_CFG_DIR)){
 		// Create the dir
-		fs.mkdirSync(userHomeDir);
+		fs.mkdirSync(USER_CFG_DIR);
 	}
-	if(!fs.existsSync(userHomeDir+'/history.json')){
+	if(!fs.existsSync(USER_CFG_DIR+'/history.json')){
 		// Create the file
-		fs.writeFileSync(userHomeDir+'/history.json', '[]');
+		fs.writeFileSync(USER_CFG_DIR+'/history.json', '[]');
 	}
-	if(!fs.existsSync(userHomeDir+'/settings.json')){
+	if(!fs.existsSync(USER_CFG_DIR+'/settings.json')){
 		// Create the file
-		fs.writeFileSync(userHomeDir+'/settings.json', '{}');
+		fs.writeFileSync(USER_CFG_DIR+'/settings.json', '{}');
 	}
 }
 
@@ -168,11 +163,11 @@ function _logHistory(ogPrompt, output){
 	};
 	const historyJSON = _loadHistory(MAX_HISTORY_STORE, false, true);
 	historyJSON.push(histNew);
-	fs.writeFileSync(userHomeDir+'/history.json', JSON.stringify(historyJSON, null, 2));
+	fs.writeFileSync(USER_CFG_DIR+'/history.json', JSON.stringify(historyJSON, null, 2));
 }
 
 function _loadHistory(count=1,reverse=true,json=false){
-	let content = fs.readFileSync(userHomeDir+'/history.json', 'UTF-8');
+	let content = fs.readFileSync(USER_CFG_DIR+'/history.json', 'UTF-8');
 	if(!content){
 		console.log('WARNING: Can not read history file!');	
 		content = '[]';
@@ -202,7 +197,7 @@ function _loadHistory(count=1,reverse=true,json=false){
 
 function history(options){
 	if(options.delete){
-		fs.rmSync(userHomeDir+'/history.json');
+		fs.rmSync(USER_CFG_DIR+'/history.json');
 		console.log('Deleted History');
 		return;
 	}
@@ -224,18 +219,18 @@ function repeat(){
 function settings(options){
 	let content;
 	if(options.delete){
-		fs.rmSync(userHomeDir+'/settings.json');
+		fs.rmSync(USER_CFG_DIR+'/settings.json');
 		content = 'Deleted Settings';
 	}
 	else{
-		content = fs.readFileSync(userHomeDir+'/settings.json', 'UTF-8');
+		content = fs.readFileSync(USER_CFG_DIR+'/settings.json', 'UTF-8');
 	}
 	console.log(content);
 	console.log('Settings can be changed with the \`set\` command.');
 }
 
 function _loadOpts(options){
-	const content = fs.readFileSync(userHomeDir+'/settings.json', 'UTF-8');
+	const content = fs.readFileSync(USER_CFG_DIR+'/settings.json', 'UTF-8');
 	const optJSON = JSON.parse(content);
 	options = Object.assign(optJSON, options);
 	return options;
@@ -243,13 +238,13 @@ function _loadOpts(options){
 
 function setOpts(options){
 	console.log(JSON.stringify(options));
-	fs.writeFileSync(userHomeDir+'/settings.json', JSON.stringify(options, null, 2));
+	fs.writeFileSync(USER_CFG_DIR+'/settings.json', JSON.stringify(options, null, 2));
 	console.log('Created a new settings file');
 }
 
 function purge(){
-	fs.rmSync(userHomeDir+'/settings.json');
-	fs.rmSync(userHomeDir+'/history.json');
+	fs.rmSync(USER_CFG_DIR+'/settings.json');
+	fs.rmSync(USER_CFG_DIR+'/history.json');
 	console.log('Purged!');
 }
 
