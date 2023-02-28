@@ -6,7 +6,7 @@ const { encode, decode } = require('gpt-3-encoder');
 const { Configuration, OpenAIApi } = require("openai");
 const { Command } = require('commander'); // (normal include)
 
-const USER_CFG_DIR = os.homedir()+'/.sllm';
+const USER_CFG_DIR = os.homedir()+'/.config/sllm';
 
 const MAX_HISTORY_STORE = 64;
 
