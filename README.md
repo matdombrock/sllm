@@ -126,7 +126,14 @@ You can prepend a reference to a file with the `-f` or `--file` option.
 
 However, be aware that files can not exceed 4k tokens.
 
+**NOTE: At the time of writing, sending a file that contains 4k tokens would cost about $0.08 (USD). See [OpenAI Pricing](https://openai.com/pricing) for more info.**
+
+### Usage Examples:
 ```
+$ sllm write a summary of this file -f sllm.js
+
+  This file is a Node.js script that provides a command line interface (CLI) for interacting with OpenAI's GPT-3 API.
+
 $ sllm what dependancies does this have -f ./package.json
 
  This package.json file has two dependencies: gpt-3-encoder and openai.

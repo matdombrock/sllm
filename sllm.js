@@ -41,10 +41,10 @@ async function llm(prompt, options) {
 	// Prepend a file if required
 	if (options.file) {
 		if (fs.existsSync(options.file)) {
-			prompt =
+			prompt ='```\r\n' +
 				fs.readFileSync(options.file, 'UTF-8') +
-				'\r\n' +
-				'Consider the previous file contents when responding to the prompt: ' +
+				'```\r\n' +
+				//'Consider the previous file contents when responding to the prompt: ' +
 				prompt;
 		}
 	}
