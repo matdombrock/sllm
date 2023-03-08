@@ -100,12 +100,13 @@ $ sllm -h prompt
 
 Usage: sllm prompt [options] <prompt...>
 
-Send a prompt (default command)
+send a prompt (default command)
 
 Arguments:
   prompt                      the prompt text
 
 Options:
+  -v, --verbose               verbose output
   -m, --max-tokens <number>   maximum tokens to use (default: "256")
   -t, --temperature <number>  temperature to use (default: "0.2")
   -c, --context <string...>   context to prepend
@@ -114,7 +115,7 @@ Options:
   -5, --like-im-five          explain it like I'm 5 years old
   -H, --history <number>      prepend history (chatGPT mode)
   -f, --file <path>           preprend the given file contents
-  -v, --verbose               verbose output
+  -T, --trim                  automatically trim the given file contents
   -M, --mock                  dont actually send the prompt to the API
   -h, --help                  display help for command
 
@@ -127,6 +128,11 @@ You can prepend a reference to a file with the `-f` or `--file` option.
 However, be aware that files can not exceed 4k tokens. To the best of my knowlege, there is no way to get the GPT3 API to process more than 4096 tokens at once which means that this is a hard limitation and it would not be possible to get a meaningful analysis of a file that exceeds 4k tokens. 
 
 **NOTE: At the time of writing, sending a file that contains 4k tokens would cost about $0.08 (USD). See [OpenAI Pricing](https://openai.com/pricing) for more info.**
+
+### Trimming Files to Save Tokens
+If your files are too large or you simply want to save a few tokens, you can try adding the `--trim` flag when loading a file. This command will attempt to remove all white spaces, tabs and new lines from the file. This might confuse the LLM so it's typically better to avoid this option unless needed. 
+
+Depending on the type of file you want to analyse, you might also try minifying the file before running it through sllm. 
 
 ### Usage Examples:
 ```

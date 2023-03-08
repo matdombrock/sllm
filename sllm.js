@@ -40,13 +40,17 @@ async function llm(prompt, options) {
 
 	// Prepend a file if required
 	if (options.file) {
+		let fileContents = '';
 		if (fs.existsSync(options.file)) {
-			prompt ='```\r\n' +
-				fs.readFileSync(options.file, 'UTF-8') +
-				'```\r\n' +
-				//'Consider the previous file contents when responding to the prompt: ' +
-				prompt;
+			fileContents = fs.readFileSync(options.file, 'UTF-8');
 		}
+		if(options.trim){
+			fileContents = _trim(fileContents);
+		}
+		prompt ='```\r\n' +
+				fileContents +
+				'```\r\n' +
+				prompt;
 	}
 
 	// Preproceess the prompt
@@ -190,8 +194,11 @@ function countTokens(options) {
 		tokens += encoded.length;
 	}
 	if (options.file) {
-		const contents = fs.readFileSync(options.file, 'UTF-8');
-		const encoded = encode(contents);
+		let fileContents = fs.readFileSync(options.file, 'UTF-8');
+		if(options.trim){
+			fileContents = _trim(fileContents);
+		}
+		const encoded = encode(fileContents);
 		tokens += encoded.length;
 	}
 	if (tokens === 0) {
@@ -279,6 +286,10 @@ function _loadHistory(count = 1, reverse = true, json = false) {
 	return historyStr;
 }
 
+function _trim(str){
+	return str.replace((/  |\r\n|\n|\r/gm),"");
+}
+
 const program = new Command();
 
 program
@@ -292,6 +303,7 @@ program
 	.command('prompt', { isDefault: true })
 	.description('send a prompt (default command)')
 	.argument('<prompt...>', 'the prompt text')
+	.option('-v, --verbose', 'verbose output')
 	.option('-m, --max-tokens <number>', 'maximum tokens to use', '256')
 	.option('-t, --temperature <number>', 'temperature to use', '0.2')
 	.option('-c, --context <string...>', 'context to prepend')
@@ -300,7 +312,7 @@ program
 	.option('-5, --like-im-five', 'explain it like I\'m 5 years old')
 	.option('-H, --history <number>', 'prepend history (chatGPT mode)')
 	.option('-f, --file <path>', 'preprend the given file contents')
-	.option('-v, --verbose', 'verbose output')
+	.option('-T, --trim', 'automatically trim the given file contents')
 	.option('-M, --mock', 'dont actually send the prompt to the API')
 	.action((prompt, options) => {
 		llm(prompt, options);
@@ -309,15 +321,16 @@ program
 program
 	.command('set')
 	.description('set a persistant command option')
+	.option('-v, --verbose', 'verbose output')
 	.option('-m, --max-tokens <number>', 'maximum tokens to use', '256')
 	.option('-t, --temperature <number>', 'temperature to use', '0.2')
-	.option('-c, --context <string...>', 'dontext to prepend')
+	.option('-c, --context <string...>', 'context to prepend')
 	.option('-d, --domain <string...>', 'subject domain to prepend')
 	.option('-e, --expert <string...>', 'act as an expert on this domain')
 	.option('-5, --like-im-five', 'explain it like I\'m 5 years old')
 	.option('-H, --history <number>', 'prepend history (chatGPT mode)')
 	.option('-f, --file <path>', 'preprend the given file contents')
-	.option('-v, --verbose', 'verbose output')
+	.option('-T, --trim', 'automatically trim the given file contents')
 	.option('-M, --mock', 'dont actually send the prompt to the API')
 	.action((options) => {
 		setOpts(options);
@@ -354,6 +367,7 @@ program
 	.description('estimate the tokens used by a prompt or file')
 	.option('-p, --prompt <string...>', 'the prompt string to check')
 	.option('-f, --file <path>', 'the file path to check')
+	.option('-T, --trim', 'automatically trim the given file contents')
 	.action((options) => {
 		countTokens(options);
 	});
