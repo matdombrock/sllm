@@ -157,7 +157,7 @@ $ sllm is this file NodeJS or Browser JS? -f example.js
 
   This file is Node.js.
 
-$ sllm why do you say that?
+$ sllm why do you say that? -H 1
 
   This file contains code that is specific to Node.js, such as the require statement, which is not supported in browser JavaScript.
 
