@@ -132,6 +132,7 @@ async function llm(prompt, options) {
 	// Trim whitesapce
 	output = output.trim();
 	// Log output
+	console.log('');// This line intentionally left blank
 	console.log(output);
 
 	// Log history
