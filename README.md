@@ -124,7 +124,7 @@ Options:
 
 You can prepend a reference to a file with the `-f` or `--file` option.
 
-However, be aware that files can not exceed 4k tokens.
+However, be aware that files can not exceed 4k tokens. To the best of my knowlege, there is no way to get the GPT3 API to process more than 4096 tokens at once which means that this is a hard limitation and it would not be possible to get a meaningful analysis of a file that exceeds 4k tokens. 
 
 **NOTE: At the time of writing, sending a file that contains 4k tokens would cost about $0.08 (USD). See [OpenAI Pricing](https://openai.com/pricing) for more info.**
 
