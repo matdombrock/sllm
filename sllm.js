@@ -74,7 +74,7 @@ async function llm(prompt, options) {
 	// Append History
 	const ogPrompt = prompt; // Cache for history etc
 	if (options.history) {
-		prompt =_loadHistory(options.history, false) + // Revrsed
+		prompt =_loadHistory(options.history, false) + prompt; // Revrsed
 	}
 
 	// Count total prompt tokens and append to the maxTokens value
@@ -111,6 +111,10 @@ async function llm(prompt, options) {
 			prompt: prompt,
 			max_tokens: options.maxTokens,
 			temperature: options.temperature,
+		})
+		.catch((err)=>{
+		    console.log('Something went wrong!');
+		    process.exit();
 		});
 		output = completion.data.choices[0].text;
 	}
