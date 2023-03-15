@@ -40,17 +40,17 @@ async function llm(prompt, options) {
 
 	// Prepend a file if required
 	if (options.file) {
-		let fileContents = '';
-		if (fs.existsSync(options.file)) {
-			fileContents = fs.readFileSync(options.file, 'UTF-8');
-		}
-		if(options.trim){
-			fileContents = _trim(fileContents);
-		}
-		prompt ='```\r\n' +
-				fileContents +
-				'```\r\n' +
-				prompt;
+	    let fileContents = '';
+	    if (fs.existsSync(options.file)) {
+		fileContents = fs.readFileSync(options.file, 'UTF-8');
+	    }
+	    if(options.trim){
+		fileContents = _trim(fileContents);
+	    }
+	    prompt ='```\r\n' +
+		fileContents +
+		'```\r\n' +
+		prompt;
 	}
 
 	// Preproceess the prompt
@@ -58,8 +58,7 @@ async function llm(prompt, options) {
 		prompt = 'Answer this as if I\'m five years old: ' + prompt;
 	}
 	if (options.context) {
-		prompt =
-			'In the context of ' + options.context.join(' ') + ', ' + prompt;
+		prompt = 'In the context of ' + options.context.join(' ') + ', ' + prompt;
 	}
 	if (options.domain) {
 		prompt = 'In the domain of ' + options.domain.join(' ') + ', ' + prompt;
@@ -75,9 +74,7 @@ async function llm(prompt, options) {
 	// Append History
 	const ogPrompt = prompt; // Cache for history etc
 	if (options.history) {
-		prompt =
-			_loadHistory(options.history, false) + // Revrsed
-			prompt;
+		prompt =_loadHistory(options.history, false) + // Revrsed
 	}
 
 	// Count total prompt tokens and append to the maxTokens value

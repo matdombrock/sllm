@@ -1,0 +1,5 @@
+alice=50
+bob=72
+carl=23
+dan=45
+elly=22
