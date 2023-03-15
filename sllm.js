@@ -104,7 +104,7 @@ async function llm(prompt, options) {
 	}
 
 	// Make the request
-	let output = 'WARNING: Did not send!';
+	let output = 'WARNING: Did not send!';
 	if (!options.mock) {
 		const completion = await openai.createCompletion({
 			model: 'text-davinci-003',
