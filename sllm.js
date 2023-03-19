@@ -40,17 +40,7 @@ async function llm(prompt, options) {
 
 	// Prepend a file if required
 	if (options.file) {
-	    let fileContents = '';
-	    if (fs.existsSync(options.file)) {
-		fileContents = fs.readFileSync(options.file, 'UTF-8');
-	    }
-	    if(options.trim){
-		fileContents = _trim(fileContents);
-	    }
-	    prompt ='```\r\n' +
-		fileContents +
-		'```\r\n' +
-		prompt;
+	    prompt = _loadFile(options.file);
 	}
 
 	// Preproceess the prompt
@@ -247,6 +237,21 @@ async function _sendReqGPT3_5T(prompt, options){
 		process.exit();
 	});
 	return response.data.choices[0].message.content;
+}
+
+function _loadFile(fileLoc){
+	let fileContents = '';
+	if (fs.existsSync(fileLoc)) {
+		fileContents = fs.readFileSync(fileLoc, 'UTF-8');
+	}
+	if(options.trim){
+		fileContents = _trim(fileContents);
+	}
+	prompt ='```\r\n' +
+	fileContents +
+	'```\r\n' +
+	prompt;
+	return prompt;
 }
 
 function _ensureFiles() {
