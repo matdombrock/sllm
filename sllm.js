@@ -82,16 +82,7 @@ async function llm(prompt, options) {
 		console.log('-------\r\n');
 	}
 
-	// GPT can use a total of 4096 tokens at once
-	// Using 4k for the prompt allows us 96 for response
-	if (totalTokens > 4000) {
-		console.log('ERROR: Max Tokens Exceeded ' + '(' + totalTokens + ')');
-		console.log('Please limit your prompt');
-		if (options.history) {
-			console.log('Trying running with history off!');
-		}
-		return;
-	}
+	if(_overTokenLimit(totalTokens)){return;}
 
 	// Make the request
 	let output = 'WARNING: Did not send!';
@@ -252,6 +243,20 @@ function _loadFile(fileLoc){
 	'```\r\n' +
 	prompt;
 	return prompt;
+}
+
+function _overTokenLimit(totalTokens){
+	// GPT can use a total of 4096 tokens at once
+	// Using 4k for the prompt allows us 96 for response
+	if (totalTokens > 4000) {
+		console.log('ERROR: Max Tokens Exceeded ' + '(' + totalTokens + ')');
+		console.log('Please limit your prompt');
+		if (options.history) {
+			console.log('Trying running with history off!');
+		}
+		return true;
+	}
+	return false;
 }
 
 function _ensureFiles() {
