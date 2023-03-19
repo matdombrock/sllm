@@ -3,8 +3,6 @@ A command line interface for the OpenAI Large Language Models that emulates some
 
 *Note: This project has recently been updated to default to the GPT3.5-Turbo Model. You can access the GPT3 model with the `--gpt3` option.*
 
-**Bring your own token**
-
 ![screenshot](docs/sllm-ss.png)
 
 In addition to providing a simple interface for talking with GPT, this tool also offers a few extra features built on top of the GPT APIs. 
