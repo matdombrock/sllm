@@ -103,24 +103,27 @@ Commands:
 ```
 $ sllm -h prompt
 
-Usage: sllm [options] [command]
+Usage: sllm prompt [options] <prompt...>
 
-CLI for OpenAI Large Language Models. v0.9.5.
-Created by Mathieu Dombrock 2023. GPL3 License.
+send a prompt (default command)
+
+Arguments:
+  prompt                      the prompt text
 
 Options:
-  -V, --version                 output the version number
-  -h, --help                    display help for command
-
-Commands:
-  prompt [options] <prompt...>  send a prompt (default command)
-  set [options]                 set a persistant command option
-  settings [options]            view the current settings that were changed via the `set` command
-  hist [options]                manage the prompt / response history
-  purge                         delete all history and settings
-  count [options]               estimate the tokens used by a prompt or file
-  repeat                        repeat the last response
-  help [command]                display help for command
+  -v, --verbose               verbose output
+  -m, --max-tokens <number>   maximum tokens to use (default: "256")
+  -t, --temperature <number>  temperature to use (default: "0.2")
+  -c, --context <string...>   context to prepend
+  -d, --domain <string...>    subject domain to prepend
+  -e, --expert <string...>    act as an expert on this domain
+  -5, --like-im-five          explain it like I'm 5 years old
+  -H, --history <number>      prepend history (chatGPT mode)
+  -f, --file <path>           preprend the given file contents
+  -T, --trim                  automatically trim the given file contents
+  -3, --gpt3                  use text-davinci-3 mode
+  -M, --mock                  dont actually send the prompt to the API
+  -h, --help                  display help for command
 
 ```
 
