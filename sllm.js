@@ -10,6 +10,8 @@ const USER_CFG_DIR = os.homedir() + '/.config/sllm';
 
 const MAX_HISTORY_STORE = 64;
 
+const MODEL = 'gpt-3.5-turbo';
+
 // Read package.json version number
 const VERSION_NUMBER = JSON.parse(
 	fs.readFileSync(__dirname + '/package.json')
@@ -106,17 +108,12 @@ async function llm(prompt, options) {
 	// Make the request
 	let output = 'WARNING: Did not send!';
 	if (!options.mock) {
-		const completion = await openai.createCompletion({
-			model: 'text-davinci-003',
-			prompt: prompt,
-			max_tokens: options.maxTokens,
-			temperature: options.temperature,
-		})
-		.catch((err)=>{
-		    console.log('Something went wrong!');
-		    process.exit();
-		});
-		output = completion.data.choices[0].text;
+		if (options.gpt3){
+			output = await _sendReqGPT3(prompt, options);
+		}
+		else{
+			output = await _sendReqGPT3_5T(prompt, options);
+		}
 	}
 
 	// Strip dialog references
@@ -213,6 +210,47 @@ function countTokens(options) {
 	console.log('Max Reply: ' + (4096 - tokens));
 }
 
+async function _sendReqGPT3(prompt, options){
+	const reqData = {
+		model: 'text-davinci-003',
+		prompt: prompt,
+		max_tokens: options.maxTokens,
+		temperature: options.temperature,
+	};
+	if(options.verbose){
+		console.log(reqData);
+		console.log('-------\r\n');
+	}
+	const completion = await openai.createCompletion(reqData)
+	.catch((err)=>{
+		console.log(err);
+		console.log('Something went wrong!');
+		process.exit();
+	});
+	return completion.data.choices[0].text;
+}
+async function _sendReqGPT3_5T(prompt, options){
+	// Use gpt3.5 by default
+	const reqData = {
+		model: 'gpt-3.5-turbo',
+		messages: [{ role: 'user', content: prompt }],
+		max_tokens: options.maxTokens,
+		temperature: options.temperature,
+		stream: false,
+	}
+	if(options.verbose){
+		console.log(reqData);
+		console.log('-------\r\n');
+	}
+	const response = await openai.createChatCompletion(reqData)
+	.catch((err)=>{
+		console.log(err);
+		console.log('Something went wrong!');
+		process.exit();
+	});
+	return response.data.choices[0].message.content;
+}
+
 function _ensureFiles() {
 	if (!fs.existsSync(USER_CFG_DIR)) {
 		// Create the dir
@@ -239,6 +277,7 @@ function _ensureAPIKey() {
 	}
 }
 
+// Overwrite the CLI options with those saved in the file
 function _loadOpts(options) {
 	const content = fs.readFileSync(USER_CFG_DIR + '/settings.json', 'UTF-8');
 	const optJSON = JSON.parse(content);
@@ -297,7 +336,7 @@ const program = new Command();
 program
 	.name('sllm')
 	.description(
-		'CLI for GPT3. Created by Mathieu Dombrock 2023. GPL3 License.'
+		'CLI for OpenAI Large Language Models. v'+VERSION_NUMBER+'. \r\nCreated by Mathieu Dombrock 2023. GPL3 License.'
 	)
 	.version(VERSION_NUMBER);
 
@@ -315,6 +354,7 @@ program
 	.option('-H, --history <number>', 'prepend history (chatGPT mode)')
 	.option('-f, --file <path>', 'preprend the given file contents')
 	.option('-T, --trim', 'automatically trim the given file contents')
+	.option('-3, --gpt3', 'use text-davinci-3 mode')
 	.option('-M, --mock', 'dont actually send the prompt to the API')
 	.action((prompt, options) => {
 		llm(prompt, options);
@@ -333,6 +373,7 @@ program
 	.option('-H, --history <number>', 'prepend history (chatGPT mode)')
 	.option('-f, --file <path>', 'preprend the given file contents')
 	.option('-T, --trim', 'automatically trim the given file contents')
+	.option('-3, --gpt3', 'use text-davinci-3 mode')
 	.option('-M, --mock', 'dont actually send the prompt to the API')
 	.action((options) => {
 		setOpts(options);

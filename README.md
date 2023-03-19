@@ -1,9 +1,13 @@
 # SLLM - Command Line ChatGPT-like Assistant
-A command line interface for the GPT3 LLM that emulates some features of ChatGPT (Bring your own token).
+A command line interface for the OpenAI Large Language Models that emulates some features of ChatGPT. 
+
+*Note: This project has recently been updated to default to the GPT3.5-Turbo Model. You can access the GPT3 model with the `--gpt3` option.*
+
+**Bring your own token**
 
 ![screenshot](docs/sllm-ss.png)
 
-In addition to providing a simple interface for talking with GPT3, this tool also offers a few extra features built on top of the GPT3 API. 
+In addition to providing a simple interface for talking with GPT, this tool also offers a few extra features built on top of the GPT APIs. 
 
 ### Extra Features:
 - Act as a chat bot (emulates chatGPT)
@@ -77,7 +81,8 @@ $ sllm -h
 
 Usage: sllm [options] [command]
 
-CLI for GPT3. Created by Mathieu Dombrock 2023. GPL3 License.
+CLI for OpenAI Large Language Models. v0.9.5.
+Created by Mathieu Dombrock 2023. GPL3 License.
 
 Options:
   -V, --version                 output the version number
@@ -100,26 +105,24 @@ Commands:
 ```
 $ sllm -h prompt
 
-Usage: sllm prompt [options] <prompt...>
+Usage: sllm [options] [command]
 
-send a prompt (default command)
-
-Arguments:
-  prompt                      the prompt text
+CLI for OpenAI Large Language Models. v0.9.5.
+Created by Mathieu Dombrock 2023. GPL3 License.
 
 Options:
-  -v, --verbose               verbose output
-  -m, --max-tokens <number>   maximum tokens to use (default: "256")
-  -t, --temperature <number>  temperature to use (default: "0.2")
-  -c, --context <string...>   context to prepend
-  -d, --domain <string...>    subject domain to prepend
-  -e, --expert <string...>    act as an expert on this domain
-  -5, --like-im-five          explain it like I'm 5 years old
-  -H, --history <number>      prepend history (chatGPT mode)
-  -f, --file <path>           preprend the given file contents
-  -T, --trim                  automatically trim the given file contents
-  -M, --mock                  dont actually send the prompt to the API
-  -h, --help                  display help for command
+  -V, --version                 output the version number
+  -h, --help                    display help for command
+
+Commands:
+  prompt [options] <prompt...>  send a prompt (default command)
+  set [options]                 set a persistant command option
+  settings [options]            view the current settings that were changed via the `set` command
+  hist [options]                manage the prompt / response history
+  purge                         delete all history and settings
+  count [options]               estimate the tokens used by a prompt or file
+  repeat                        repeat the last response
+  help [command]                display help for command
 
 ```
 
