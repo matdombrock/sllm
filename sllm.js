@@ -26,6 +26,9 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
+/*
+	Main Prompt Function
+*/
 async function llm(prompt, options) {
 	// Join prompt into single string
 	prompt = prompt.join(' ');
@@ -45,20 +48,16 @@ async function llm(prompt, options) {
 
 	// Preproceess the prompt
 	if (options.likeImFive) {
-		prompt = 'Answer this as if I\'m five years old: ' + prompt;
+		prompt = _preLike5(prompt);
 	}
 	if (options.context) {
-		prompt = 'In the context of ' + options.context.join(' ') + ', ' + prompt;
+		prompt = _preContext(prompt, options.context);
 	}
 	if (options.domain) {
-		prompt = 'In the domain of ' + options.domain.join(' ') + ', ' + prompt;
+		prompt = _preDomain(prompt, options.domain);
 	}
 	if (options.expert) {
-		prompt =
-			'Act as an expert on ' +
-			options.expert.join(' ') +
-			'. The question I need you to answer is: ' +
-			prompt;
+		prompt = _preExpert(prompt, options.expert);
 	}
 
 	// Append History
@@ -74,12 +73,7 @@ async function llm(prompt, options) {
 
 	// Apply verbos outout
 	if (options.verbose) {
-		console.log('>> ' + ogPrompt + ' <<');
-		console.log(JSON.stringify(options, null, 2));
-		console.log('Encoded Tokens: ' + encoded.length);
-		console.log('Total Potential Tokens: ' + totalTokens);
-		console.log('Sending Prompt...');
-		console.log('-------\r\n');
+		_verbose(ogPrompt, options, encoded, totalTokens);
 	}
 
 	if(_overTokenLimit(totalTokens)){return;}
@@ -115,7 +109,9 @@ async function llm(prompt, options) {
 	// Log history
 	_logHistory(ogPrompt, output);
 }
-
+/*
+	Command functions
+*/
 function history(options) {
 	if (options.delete) {
 		fs.rmSync(USER_CFG_DIR + '/history.json');
@@ -188,7 +184,10 @@ function countTokens(options) {
 	console.log('Estimated Tokens: ' + tokens + '/' + '4096');
 	console.log('Max Reply: ' + (4096 - tokens));
 }
-
+/*
+	API Wrappers
+*/
+// Wrapper for text-davinci-003
 async function _sendReqGPT3(prompt, options){
 	const reqData = {
 		model: 'text-davinci-003',
@@ -208,6 +207,7 @@ async function _sendReqGPT3(prompt, options){
 	});
 	return completion.data.choices[0].text;
 }
+// Wrapper for GPT3.5-Turbo
 async function _sendReqGPT3_5T(prompt, options){
 	// Use gpt3.5 by default
 	const reqData = {
@@ -230,6 +230,40 @@ async function _sendReqGPT3_5T(prompt, options){
 	return response.data.choices[0].message.content;
 }
 
+/*
+	Prompt Pre-processing
+*/
+function _preLike5(prompt){
+	return 'Answer this as if I\'m five years old: ' + prompt;
+}
+function _preContext(prompt, context){
+	return 'In the context of ' + context.join(' ') + ', ' + prompt;
+}
+function _preDomain(prompt, domain){
+	return 'In the domain of ' + domain.join(' ') + ', ' + prompt;
+}
+function _preExpert(prompt, expert){
+	return 'Act as an expert on ' +
+			expert.join(' ') +
+			'. The question I need you to answer is: ' +
+			prompt;
+}
+
+/*
+	Utility Functions
+*/
+// Handle verbose logging
+function _verbose(ogPrompt, options, encoded, totalTokens){
+	console.log('>> ' + ogPrompt + ' <<');
+	console.log(JSON.stringify(options, null, 2));
+	console.log('Encoded Tokens: ' + encoded.length);
+	console.log('Total Potential Tokens: ' + totalTokens);
+	console.log('Sending Prompt...');
+	console.log('-------\r\n');
+}
+
+// Load a file from th FS
+// Handle trim if specified
 function _loadFile(fileLoc){
 	let fileContents = '';
 	if (fs.existsSync(fileLoc)) {
@@ -244,7 +278,12 @@ function _loadFile(fileLoc){
 	prompt;
 	return prompt;
 }
+function _trim(str){
+	return str.replace((/  |\r\n|\n|\r/gm),"");
+}
 
+// Check if we are over the token limit
+// Return true if we are over the token limit
 function _overTokenLimit(totalTokens){
 	// GPT can use a total of 4096 tokens at once
 	// Using 4k for the prompt allows us 96 for response
@@ -259,6 +298,8 @@ function _overTokenLimit(totalTokens){
 	return false;
 }
 
+// Ensure we have the needed files 
+// Create them if we have to
 function _ensureFiles() {
 	if (!fs.existsSync(USER_CFG_DIR)) {
 		// Create the dir
@@ -274,6 +315,7 @@ function _ensureFiles() {
 	}
 }
 
+// Ensure we have the API key setup
 function _ensureAPIKey() {
 	if (!process.env.OPENAI_API_KEY) {
 		let err = 'ERROR: OPENAI_API_KEY unset\r\n';
@@ -293,6 +335,7 @@ function _loadOpts(options) {
 	return options;
 }
 
+// Record the chat history to the local log
 function _logHistory(ogPrompt, output) {
 	const histNew = {
 		user: ogPrompt,
@@ -306,6 +349,7 @@ function _logHistory(ogPrompt, output) {
 	);
 }
 
+// Load history from the local log
 function _loadHistory(count = 1, reverse = true, json = false) {
 	let content = fs.readFileSync(USER_CFG_DIR + '/history.json', 'UTF-8');
 	if (!content) {
@@ -335,9 +379,9 @@ function _loadHistory(count = 1, reverse = true, json = false) {
 	return historyStr;
 }
 
-function _trim(str){
-	return str.replace((/  |\r\n|\n|\r/gm),"");
-}
+/*
+	Commander Setup
+*/
 
 const program = new Command();
 
