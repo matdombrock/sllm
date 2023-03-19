@@ -10,8 +10,6 @@ const USER_CFG_DIR = os.homedir() + '/.config/sllm';
 
 const MAX_HISTORY_STORE = 64;
 
-const MODEL = 'gpt-3.5-turbo';
-
 // Read package.json version number
 const VERSION_NUMBER = JSON.parse(
 	fs.readFileSync(__dirname + '/package.json')
