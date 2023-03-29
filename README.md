@@ -1,7 +1,9 @@
 # SLLM - Command Line ChatGPT-like Assistant
 A command line interface for the OpenAI Large Language Models that emulates some features of ChatGPT. 
 
-*Note: This project has recently been updated to default to the GPT3.5-Turbo Model. You can access the GPT3 model with the `--gpt3` option.*
+**UPDATE: GPT4 Support is Here!**
+
+*Note: This project has recently been updated to default to the GPT3.5-Turbo Model. You can access other models (**including GPT4**) with the `--model` option.*
 
 ![screenshot](docs/sllm-ss.png)
 
@@ -19,8 +21,8 @@ You can do whatever you want :)
 
 I made this for the following reasons:
 
-- Access GPT3 without leaving the command line
-- Access GPT3 without logging in to OpenAI (use a token instead)
+- Access LLMs without leaving the command line
+- Access LLMs without logging in to OpenAI (use a token instead)
 - Directly read and write local files
 - I don't always have easy access to a GUI
 
@@ -173,7 +175,7 @@ If your files are too large or you simply want to save a few tokens, you can try
 
 Depending on the type of file you want to analyse, you might also try minifying the file before running it through sllm. 
 
-### Usage Examples:
+### File Examples:
 ```
 $ sllm write a summary of this file -f sllm.js
 
