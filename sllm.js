@@ -26,6 +26,25 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
+const modelMap = {
+	'text-davinci-2':{
+		api: 'davinci',
+		maxTokens: 4097
+	},
+	'text-davinci-3':{
+		api: 'davinci',
+		maxTokens: 4097
+	},
+	'gpt-3.5-turbo':{
+		api: 'gpt',
+		maxTokens: 4096
+	},
+	'gpt-4':{
+		api: 'gpt',
+		maxTokens: 8192
+	}
+};
+
 /*
 	Main Prompt Function
 */
@@ -46,6 +65,11 @@ async function llm(prompt, options) {
 	    prompt = _loadFile(options.file);
 	}
 
+	// Load models data
+	const modelData = modelMap[options.model];
+	if(!modelData){
+		throw 'Error: Unknown model: '+options.model;
+	}
 	// Preproceess the prompt
 	if (options.likeImFive) {
 		prompt = _preLike5(prompt);
@@ -76,16 +100,19 @@ async function llm(prompt, options) {
 		_verbose(ogPrompt, options, encoded, totalTokens);
 	}
 
-	if(_overTokenLimit(totalTokens)){return;}
+	if(_overTokenLimit(totalTokens, modelData)){return;}
 
 	// Make the request
 	let output = 'WARNING: Did not send!';
-	if (!options.mock) {
-		if (options.gpt3){
-			output = await _sendReqGPT3(prompt, options);
+	if (!options.mock) {		
+		if(modelData.api === 'gpt'){
+			output = await _sendReqGPT(prompt, options);
+		}
+		else if(modelData.api === 'davinci'){
+			output = await _sendReqDavinci(prompt, options);
 		}
 		else{
-			output = await _sendReqGPT3_5T(prompt, options);
+			throw 'Error: Unknown API for model: '+options.model;
 		}
 	}
 
@@ -187,10 +214,10 @@ function countTokens(options) {
 /*
 	API Wrappers
 */
-// Wrapper for text-davinci-003
-async function _sendReqGPT3(prompt, options){
+// Wrapper for completion
+async function _sendReqDavinci(prompt, options){
 	const reqData = {
-		model: 'text-davinci-003',
+		model: options.model,
 		prompt: prompt,
 		max_tokens: options.maxTokens,
 		temperature: options.temperature,
@@ -207,11 +234,11 @@ async function _sendReqGPT3(prompt, options){
 	});
 	return completion.data.choices[0].text;
 }
-// Wrapper for GPT3.5-Turbo
-async function _sendReqGPT3_5T(prompt, options){
+// Wrapper for chat completion
+async function _sendReqGPT(prompt, options){
 	// Use gpt3.5 by default
 	const reqData = {
-		model: 'gpt-3.5-turbo',
+		model: options.model,
 		messages: [{ role: 'user', content: prompt }],
 		max_tokens: options.maxTokens,
 		temperature: options.temperature,
@@ -221,15 +248,14 @@ async function _sendReqGPT3_5T(prompt, options){
 		console.log(reqData);
 		console.log('-------\r\n');
 	}
-	const response = await openai.createChatCompletion(reqData)
+	const completion = await openai.createChatCompletion(reqData)
 	.catch((err)=>{
 		console.log(err);
 		console.log('Something went wrong!');
 		process.exit();
 	});
-	return response.data.choices[0].message.content;
+	return completion.data.choices[0].message.content;
 }
-
 /*
 	Prompt Pre-processing
 */
@@ -284,10 +310,8 @@ function _trim(str){
 
 // Check if we are over the token limit
 // Return true if we are over the token limit
-function _overTokenLimit(totalTokens){
-	// GPT can use a total of 4096 tokens at once
-	// Using 4k for the prompt allows us 96 for response
-	if (totalTokens > 4000) {
+function _overTokenLimit(totalTokens, modelData){
+	if (totalTokens > modelData.maxTokens - 96) {
 		console.log('ERROR: Max Tokens Exceeded ' + '(' + totalTokens + ')');
 		console.log('Please limit your prompt');
 		if (options.history) {
@@ -397,7 +421,7 @@ program
 	.description('send a prompt (default command)')
 	.argument('<prompt...>', 'the prompt text')
 	.option('-v, --verbose', 'verbose output')
-	.option('-m, --max-tokens <number>', 'maximum tokens to use', '256')
+	.option('-x, --max-tokens <number>', 'maximum tokens to use', '256')
 	.option('-t, --temperature <number>', 'temperature to use', '0.2')
 	.option('-c, --context <string...>', 'context to prepend')
 	.option('-d, --domain <string...>', 'subject domain to prepend')
@@ -406,8 +430,10 @@ program
 	.option('-H, --history <number>', 'prepend history (chatGPT mode)')
 	.option('-f, --file <path>', 'preprend the given file contents')
 	.option('-T, --trim', 'automatically trim the given file contents')
-	.option('-3, --gpt3', 'use text-davinci-3 mode')
-	.option('-M, --mock', 'dont actually send the prompt to the API')
+	.option('-m, --model <string>', 'specify the model name', 'gpt-3.5-turbo')
+	.option('--gpt3.5t', 'use text-davinci-3.5 turbo mode')
+	.option('--gpt3', 'use text-davinci-3 mode')
+	.option('--mock', 'dont actually send the prompt to the API')
 	.action((prompt, options) => {
 		llm(prompt, options);
 	});
@@ -416,7 +442,7 @@ program
 	.command('set')
 	.description('set a persistant command option')
 	.option('-v, --verbose', 'verbose output')
-	.option('-m, --max-tokens <number>', 'maximum tokens to use', '256')
+	.option('-x, --max-tokens <number>', 'maximum tokens to use', '256')
 	.option('-t, --temperature <number>', 'temperature to use', '0.2')
 	.option('-c, --context <string...>', 'context to prepend')
 	.option('-d, --domain <string...>', 'subject domain to prepend')
@@ -426,7 +452,7 @@ program
 	.option('-f, --file <path>', 'preprend the given file contents')
 	.option('-T, --trim', 'automatically trim the given file contents')
 	.option('-3, --gpt3', 'use text-davinci-3 mode')
-	.option('-M, --mock', 'dont actually send the prompt to the API')
+	.option('--mock', 'dont actually send the prompt to the API')
 	.action((options) => {
 		setOpts(options);
 	});
