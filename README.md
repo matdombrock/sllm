@@ -81,7 +81,7 @@ $ sllm -h
 
 Usage: sllm [options] [command]
 
-CLI for OpenAI Large Language Models. v1.0.1
+CLI for OpenAI Large Language Models. v1.0.3
 Created by Mathieu Dombrock 2023. GPL3 License.
 
 Options:
@@ -138,8 +138,6 @@ $ sllm prompt -h
 
 Usage: sllm prompt [options] <prompt...>
 
-Usage: sllm prompt [options] <prompt...>
-
 send a prompt (default command)
 
 Arguments:
@@ -147,7 +145,8 @@ Arguments:
 
 Options:
   -v, --verbose               verbose output
-  -x, --max-tokens <number>   maximum tokens to use (default: "256")
+  -x, --max-tokens <number>   maximum tokens to use in response (default: "256")
+  -X, --unlimited             do not limit tokens used in reponse
   -t, --temperature <number>  temperature to use (default: "0.2")
   -c, --context <string...>   context to prepend
   -d, --domain <string...>    subject domain to prepend

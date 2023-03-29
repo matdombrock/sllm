@@ -123,6 +123,12 @@ async function llm(prompt, options) {
 	// Count total prompt tokens and append to the maxTokens value
 	const encoded = encode(prompt);
 	const tokenCount = encoded.length;
+	if(options.unlimited){
+		options.maxTokens = modelData.maxTokens - tokenCount - 96;
+		if(options.verbose){
+			console.log('Set maxTokens to: '+options.maxTokens);
+		}
+	}
 	const totalTokens = options.maxTokens + tokenCount;
 
 	// Apply verbos outout
@@ -130,7 +136,7 @@ async function llm(prompt, options) {
 		_verbose(ogPrompt, options, encoded, totalTokens);
 	}
 
-	if(_overTokenLimit(totalTokens, modelData)){return;}
+	if(_overTokenLimit(totalTokens, modelData, options)){return;}
 
 	// Make the request
 	let output = 'WARNING: Did not send!';
@@ -384,7 +390,11 @@ function _trim(str){
 
 // Check if we are over the token limit
 // Return true if we are over the token limit
-function _overTokenLimit(totalTokens, modelData){
+function _overTokenLimit(totalTokens, modelData, options){
+	if (options.maxTokens > modelData.maxTokens){
+		console.log(`ERROR: You requested ${options.maxTokens} which exceeds the model limit of ${modelData.maxTokens}`);
+		return true;
+	}
 	if (totalTokens > modelData.maxTokens - 96) {
 		console.log('ERROR: Max Tokens Exceeded ' + '(' + totalTokens + ')');
 		console.log('Please limit your prompt');
@@ -495,7 +505,8 @@ program
 	.description('send a prompt (default command)')
 	.argument('<prompt...>', 'the prompt text')
 	.option('-v, --verbose', 'verbose output')
-	.option('-x, --max-tokens <number>', 'maximum tokens to use', '256')
+	.option('-x, --max-tokens <number>', 'maximum tokens to use in response', '256')
+	.option('-X, --unlimited', 'do not limit tokens used in reponse')
 	.option('-t, --temperature <number>', 'temperature to use', '0.2')
 	.option('-c, --context <string...>', 'context to prepend')
 	.option('-d, --domain <string...>', 'subject domain to prepend')
@@ -515,7 +526,8 @@ program
 	.description('set a persistant command option')
 	.argument('<prompt...>', 'the prompt text')
 	.option('-v, --verbose', 'verbose output')
-	.option('-x, --max-tokens <number>', 'maximum tokens to use', '256')
+	.option('-x, --max-tokens <number>', 'maximum tokens to use in response', '256')
+	.option('-X, --no-limit', 'do not limit tokens used in reponse')
 	.option('-t, --temperature <number>', 'temperature to use', '0.2')
 	.option('-c, --context <string...>', 'context to prepend')
 	.option('-d, --domain <string...>', 'subject domain to prepend')
