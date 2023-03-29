@@ -79,7 +79,7 @@ $ sllm -h
 
 Usage: sllm [options] [command]
 
-CLI for OpenAI Large Language Models. v0.9.5.
+CLI for OpenAI Large Language Models. vXX.YY.ZZ.
 Created by Mathieu Dombrock 2023. GPL3 License.
 
 Options:
@@ -88,12 +88,13 @@ Options:
 
 Commands:
   prompt [options] <prompt...>  send a prompt (default command)
-  set [options]                 set a persistant command option
+  set [options] <prompt...>     set a persistant command option
   settings [options]            view the current settings that were changed via the `set` command
   hist [options]                manage the prompt / response history
   purge                         delete all history and settings
   count [options]               estimate the tokens used by a prompt or file
   repeat                        repeat the last response
+  models                        list the available models
   help [command]                display help for command
 
 ```
@@ -101,7 +102,9 @@ Commands:
 ## Prompt
 
 ```
-$ sllm -h prompt
+$ sllm prompt -h
+
+Usage: sllm prompt [options] <prompt...>
 
 Usage: sllm prompt [options] <prompt...>
 
@@ -112,7 +115,7 @@ Arguments:
 
 Options:
   -v, --verbose               verbose output
-  -m, --max-tokens <number>   maximum tokens to use (default: "256")
+  -x, --max-tokens <number>   maximum tokens to use (default: "256")
   -t, --temperature <number>  temperature to use (default: "0.2")
   -c, --context <string...>   context to prepend
   -d, --domain <string...>    subject domain to prepend
@@ -121,8 +124,8 @@ Options:
   -H, --history <number>      prepend history (chatGPT mode)
   -f, --file <path>           preprend the given file contents
   -T, --trim                  automatically trim the given file contents
-  -3, --gpt3                  use text-davinci-3 mode
-  -M, --mock                  dont actually send the prompt to the API
+  -m, --model <model-name>    specify the model name (default: "gpt-3.5-turbo")
+  --mock                      dont actually send the prompt to the API
   -h, --help                  display help for command
 
 ```
