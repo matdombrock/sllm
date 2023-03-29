@@ -52,6 +52,12 @@ const modelMap = {
 		maxTokens: 8192,
 		beta: true
 	},
+	'gpt-4-32k':{
+		model: 'gpt-4-32k',
+		api: 'gpt',
+		maxTokens: 32768,
+		beta: true
+	},
 	'code-davinci-002':{
 		model: 'code-davinci-002',
 		api: 'davinci',
@@ -62,19 +68,9 @@ const modelMap = {
 const modelAlias = {
 	'gpt3':'text-davinci-003',
 	'gpt3t':'gpt-3.5-turbo',
-	'gpt4':'gpt-4'
+	'gpt4':'gpt-4',
+	'gpt4b':'gpt-4-32k'
 }
-// Append aliases
-//function _modelMapAlias(alias, model){
-//	const modelData = modelMap[model];
-//	if(!model){
-//		throw 'Error: Bad alias: '+alias;
-//	}
-//	modelMap[alias] = {...modelData};
-//}
-//_modelMapAlias('gpt3', 'text-davinci-003');
-//_modelMapAlias('gpt4', 'gpt-4');
-//_modelMapAlias('gpt3t', 'gpt-3.5-turbo');
 
 /*
 	Main Prompt Function
@@ -93,7 +89,7 @@ async function llm(prompt, options) {
 
 	// Prepend a file if required
 	if (options.file) {
-	    prompt = _loadFile(options.file);
+	    prompt = _loadFile(options);
 	}
 	// Check model aliases
 	if(modelAlias[options.model]){
@@ -223,6 +219,15 @@ function purge() {
 
 function countTokens(options) {
 	let tokens = 0;
+	// Check model aliases
+	if(modelAlias[options.model]){
+		options.model = modelAlias[options.model];
+	}
+	// Load models data
+	const modelData = modelMap[options.model];
+	if(!modelData){
+		throw 'Error: Unknown model: '+options.model;
+	}
 	if (options.prompt) {
 		options.prompt = options.prompt.join(' ');
 		const encoded = encode(options.prompt);
@@ -241,9 +246,9 @@ function countTokens(options) {
 		console.log('Use the --prompt or --file options!');
 		return;
 	}
-
-	console.log('Estimated Tokens: ' + tokens + '/' + '4096');
-	console.log('Max Reply: ' + (4096 - tokens));
+	const maxTokens = modelData.maxTokens;
+	console.log('Estimated Tokens: ' + tokens + '/' + maxTokens);
+	console.log('Max Reply: ' + (maxTokens - tokens));
 }
 
 function listModels(){
@@ -286,10 +291,12 @@ async function _sendReqDavinci(prompt, options, modelData){
 	}
 	const completion = await openai.createCompletion(reqData)
 	.catch((err)=>{
-		console.log(err);
+		if(options.verbose){
+			console.log(err);
+		}
 		console.log('Error: Something went wrong!');
 		if(modelData.beta){
-			console.log('This is a beta API which you might not have access to!');
+			console.log('Note: '+modelData.model+' is a beta API which you might not have access to!');
 		}
 		process.exit();
 	});
@@ -311,10 +318,12 @@ async function _sendReqGPT(prompt, options, modelData){
 	}
 	const completion = await openai.createChatCompletion(reqData)
 	.catch((err)=>{
-		console.log(err);
+		if(options.verbose){
+			console.log(err);
+		}
 		console.log('Error: Something went wrong!');
 		if(modelData.beta){
-			console.log('This is a beta API which you might not have access to!');
+			console.log('Note: '+modelData.model+' is a beta model which you might not have access to!');
 		}
 		process.exit();
 	});
@@ -354,8 +363,9 @@ function _verbose(ogPrompt, options, encoded, totalTokens){
 
 // Load a file from th FS
 // Handle trim if specified
-function _loadFile(fileLoc){
+function _loadFile(options){
 	let fileContents = '';
+	const fileLoc = options.file;
 	if (fs.existsSync(fileLoc)) {
 		fileContents = fs.readFileSync(fileLoc, 'UTF-8');
 	}
@@ -365,7 +375,7 @@ function _loadFile(fileLoc){
 	prompt ='```\r\n' +
 	fileContents +
 	'```\r\n' +
-	prompt;
+	options.prompt;
 	return prompt;
 }
 function _trim(str){
@@ -494,9 +504,7 @@ program
 	.option('-H, --history <number>', 'prepend history (chatGPT mode)')
 	.option('-f, --file <path>', 'preprend the given file contents')
 	.option('-T, --trim', 'automatically trim the given file contents')
-	.option('-m, --model <string>', 'specify the model name', 'gpt-3.5-turbo')
-	.option('--gpt3.5t', 'use text-davinci-3.5 turbo mode')
-	.option('--gpt3', 'use text-davinci-3 mode')
+	.option('-m, --model <model-name>', 'specify the model name', 'gpt-3.5-turbo')
 	.option('--mock', 'dont actually send the prompt to the API')
 	.action((prompt, options) => {
 		llm(prompt, options);
@@ -505,6 +513,7 @@ program
 program
 	.command('set')
 	.description('set a persistant command option')
+	.argument('<prompt...>', 'the prompt text')
 	.option('-v, --verbose', 'verbose output')
 	.option('-x, --max-tokens <number>', 'maximum tokens to use', '256')
 	.option('-t, --temperature <number>', 'temperature to use', '0.2')
@@ -515,7 +524,7 @@ program
 	.option('-H, --history <number>', 'prepend history (chatGPT mode)')
 	.option('-f, --file <path>', 'preprend the given file contents')
 	.option('-T, --trim', 'automatically trim the given file contents')
-	.option('-3, --gpt3', 'use text-davinci-3 mode')
+	.option('-m, --model <model-name>', 'specify the model name', 'gpt-3.5-turbo')
 	.option('--mock', 'dont actually send the prompt to the API')
 	.action((options) => {
 		setOpts(options);
@@ -553,6 +562,7 @@ program
 	.option('-p, --prompt <string...>', 'the prompt string to check')
 	.option('-f, --file <path>', 'the file path to check')
 	.option('-T, --trim', 'automatically trim the given file contents')
+	.option('-m, --model <string>', 'specify the model name', 'gpt-3.5-turbo')
 	.action((options) => {
 		countTokens(options);
 	});
