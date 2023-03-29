@@ -79,7 +79,7 @@ $ sllm -h
 
 Usage: sllm [options] [command]
 
-CLI for OpenAI Large Language Models. vXX.YY.ZZ.
+CLI for OpenAI Large Language Models. v1.0.1
 Created by Mathieu Dombrock 2023. GPL3 License.
 
 Options:
@@ -97,6 +97,36 @@ Commands:
   models                        list the available models
   help [command]                display help for command
 
+```
+
+## Available Models
+
+```
+$ sllm models
+
+Available Models:
+-------
+text-davinci-002
+-------
+text-davinci-003
+alias: gpt3
+-------
+gpt-3.5-turbo
+alias: gpt3t
+-------
+gpt-4
+alias: gpt4
+beta: might require special access!
+-------
+gpt-4-32k
+alias: gpt4b
+beta: might require special access!
+-------
+code-davinci-002
+beta: might require special access!
+///////
+You can specify a model with the -m option
+More info: https://platform.openai.com/docs/models/
 ```
 
 ## Prompt

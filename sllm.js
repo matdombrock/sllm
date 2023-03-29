@@ -486,7 +486,7 @@ const program = new Command();
 program
 	.name('sllm')
 	.description(
-		'CLI for OpenAI Large Language Models. v'+VERSION_NUMBER+'. \r\nCreated by Mathieu Dombrock 2023. GPL3 License.'
+		'CLI for OpenAI Large Language Models. v'+VERSION_NUMBER+' \r\nCreated by Mathieu Dombrock 2023. GPL3 License.'
 	)
 	.version(VERSION_NUMBER);
 
