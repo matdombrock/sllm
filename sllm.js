@@ -27,32 +27,54 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 const modelMap = {
-	'text-davinci-2':{
+	'text-davinci-002':{
+		model: 'text-davinci-002',
 		api: 'davinci',
 		maxTokens: 4097,
 		beta: false
 	},
-	'text-davinci-3':{
+	'text-davinci-003':{
+		model: 'text-davinci-003',
 		api: 'davinci',
 		maxTokens: 4097,
 		beta: false
-	},
-	'code-davinci-002':{
-		api: 'davinci',
-		maxTokens: 8001,
-		beta: true
-	},
+	},	
 	'gpt-3.5-turbo':{
+		model: 'gpt-3.5-turbo',
 		api: 'gpt',
 		maxTokens: 4096,
 		beta: false
 	},
+	// Beta Models
 	'gpt-4':{
+		model: 'gpt-4',
 		api: 'gpt',
 		maxTokens: 8192,
 		beta: true
-	}
+	},
+	'code-davinci-002':{
+		model: 'code-davinci-002',
+		api: 'davinci',
+		maxTokens: 8001,
+		beta: true
+	},
 };
+const modelAlias = {
+	'gpt3':'text-davinci-003',
+	'gpt3t':'gpt-3.5-turbo',
+	'gpt4':'gpt-4'
+}
+// Append aliases
+//function _modelMapAlias(alias, model){
+//	const modelData = modelMap[model];
+//	if(!model){
+//		throw 'Error: Bad alias: '+alias;
+//	}
+//	modelMap[alias] = {...modelData};
+//}
+//_modelMapAlias('gpt3', 'text-davinci-003');
+//_modelMapAlias('gpt4', 'gpt-4');
+//_modelMapAlias('gpt3t', 'gpt-3.5-turbo');
 
 /*
 	Main Prompt Function
@@ -73,7 +95,10 @@ async function llm(prompt, options) {
 	if (options.file) {
 	    prompt = _loadFile(options.file);
 	}
-
+	// Check model aliases
+	if(modelAlias[options.model]){
+		options.model = modelAlias[options.model];
+	}
 	// Load models data
 	const modelData = modelMap[options.model];
 	if(!modelData){
@@ -220,13 +245,37 @@ function countTokens(options) {
 	console.log('Estimated Tokens: ' + tokens + '/' + '4096');
 	console.log('Max Reply: ' + (4096 - tokens));
 }
+
+function listModels(){
+	console.log('Available Models:');
+	for(const [modelName, modelData] of Object.entries(modelMap)){
+		let alias = '';
+		for(const [aliasName, aliasModelName] of Object.entries(modelAlias)){
+			if(aliasModelName === modelName){
+				alias = aliasName;
+			}
+		}
+		console.log('-------');
+		console.log(modelName);
+		if(alias){
+			console.log('alias: '+alias);
+		}
+		if(modelData.beta){
+			console.log('beta: might require special access!');
+		}
+	}
+	console.log('///////');
+	console.log('You can specify a model with the -m option');
+	console.log('More info: https://platform.openai.com/docs/models/');
+}
+
 /*
 	API Wrappers
 */
 // Wrapper for completion
 async function _sendReqDavinci(prompt, options, modelData){
 	const reqData = {
-		model: options.model,
+		model: modelData.model,
 		prompt: prompt,
 		max_tokens: options.maxTokens,
 		temperature: options.temperature,
@@ -250,7 +299,7 @@ async function _sendReqDavinci(prompt, options, modelData){
 async function _sendReqGPT(prompt, options, modelData){
 	// Use gpt3.5 by default
 	const reqData = {
-		model: options.model,
+		model: modelData.model,
 		messages: [{ role: 'user', content: prompt }],
 		max_tokens: options.maxTokens,
 		temperature: options.temperature,
@@ -513,6 +562,13 @@ program
 	.description('repeat the last response')
 	.action(() => {
 		repeat();
+	});
+
+program
+	.command('models')
+	.description('list the available models')
+	.action(() => {
+		listModels();
 	});
 
 program.parse();
