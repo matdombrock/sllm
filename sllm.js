@@ -29,19 +29,28 @@ const openai = new OpenAIApi(configuration);
 const modelMap = {
 	'text-davinci-2':{
 		api: 'davinci',
-		maxTokens: 4097
+		maxTokens: 4097,
+		beta: false
 	},
 	'text-davinci-3':{
 		api: 'davinci',
-		maxTokens: 4097
+		maxTokens: 4097,
+		beta: false
+	},
+	'code-davinci-002':{
+		api: 'davinci',
+		maxTokens: 8001,
+		beta: true
 	},
 	'gpt-3.5-turbo':{
 		api: 'gpt',
-		maxTokens: 4096
+		maxTokens: 4096,
+		beta: false
 	},
 	'gpt-4':{
 		api: 'gpt',
-		maxTokens: 8192
+		maxTokens: 8192,
+		beta: true
 	}
 };
 
@@ -106,10 +115,10 @@ async function llm(prompt, options) {
 	let output = 'WARNING: Did not send!';
 	if (!options.mock) {		
 		if(modelData.api === 'gpt'){
-			output = await _sendReqGPT(prompt, options);
+			output = await _sendReqGPT(prompt, options, modelData);
 		}
 		else if(modelData.api === 'davinci'){
-			output = await _sendReqDavinci(prompt, options);
+			output = await _sendReqDavinci(prompt, options, modelData);
 		}
 		else{
 			throw 'Error: Unknown API for model: '+options.model;
@@ -215,7 +224,7 @@ function countTokens(options) {
 	API Wrappers
 */
 // Wrapper for completion
-async function _sendReqDavinci(prompt, options){
+async function _sendReqDavinci(prompt, options, modelData){
 	const reqData = {
 		model: options.model,
 		prompt: prompt,
@@ -229,13 +238,16 @@ async function _sendReqDavinci(prompt, options){
 	const completion = await openai.createCompletion(reqData)
 	.catch((err)=>{
 		console.log(err);
-		console.log('Something went wrong!');
+		console.log('Error: Something went wrong!');
+		if(modelData.beta){
+			console.log('This is a beta API which you might not have access to!');
+		}
 		process.exit();
 	});
 	return completion.data.choices[0].text;
 }
 // Wrapper for chat completion
-async function _sendReqGPT(prompt, options){
+async function _sendReqGPT(prompt, options, modelData){
 	// Use gpt3.5 by default
 	const reqData = {
 		model: options.model,
@@ -251,7 +263,10 @@ async function _sendReqGPT(prompt, options){
 	const completion = await openai.createChatCompletion(reqData)
 	.catch((err)=>{
 		console.log(err);
-		console.log('Something went wrong!');
+		console.log('Error: Something went wrong!');
+		if(modelData.beta){
+			console.log('This is a beta API which you might not have access to!');
+		}
 		process.exit();
 	});
 	return completion.data.choices[0].message.content;
