@@ -26,6 +26,7 @@ Created by Mathieu Dombrock 2023. GPL3 License.
     //.helpOption(false)
     .addHelpCommand(false)
     .addHelpText('after', '\nNote: All commands are prefixed with "." to avoid conflicting with prompts!')
+    .showHelpAfterError('Use `sllm --help` or `sllm [cmd] --help` for more info.')
     .version(getPkgVer_js_1.default);
 program
     .command('.help')
