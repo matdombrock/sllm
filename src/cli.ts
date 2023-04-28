@@ -14,8 +14,15 @@ const program = new Command();
 
 program
 	.name('sllm')
-	.description(
-		'CLI for OpenAI Large Language Models. v'+VERSION_NUMBER+' \r\nCreated by Mathieu Dombrock 2023. GPL3 License.'
+	.description(`
+         ____    
+    ___ / / /_ _ 
+   (_-</ / /  ' \\
+  /___/_/_/_/_/_/					
+
+CLI for OpenAI Large Language Models. v${VERSION_NUMBER}
+Created by Mathieu Dombrock 2023. GPL3 License.
+`
 	)
 	//.helpOption(false)
 	.addHelpCommand(false)
@@ -53,7 +60,6 @@ program
 program
 	.command('.settings')
 	.description('set a persistant command option')
-	.argument('<prompt...>', 'the prompt text')
 	.option('-v, --verbose', 'verbose output')
 	.option('-x, --max-tokens <number>', 'maximum tokens to use in response', '256')
 	.option('-X, --no-limit', 'do not limit tokens used in reponse')
