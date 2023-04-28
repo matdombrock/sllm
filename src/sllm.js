@@ -94,6 +94,7 @@ class SLLM {
                 // Make the request
                 let output = 'WARNING: Did not send!';
                 if (!options.mock) {
+                    console.log('Thinking...');
                     if (modelData.api === 'gpt') {
                         output = yield this._sendReqGPT(prompt, options, modelData);
                     }
@@ -125,54 +126,48 @@ class SLLM {
         /*
             Command functions
         */
-        this.history = function (options) {
-            if (options.delete) {
-                // Ensure number
-                fs_1.default.rmSync(USER_CFG_DIR + '/history.json');
-                console.log('Deleted History');
+        this.historyView = function (options) {
+            // Ensure number
+            options.number = Number(options.view) || 32;
+            const content = _loadHistory(options.view, false);
+            console.log(content);
+            return;
+        };
+        this.historyPurge = function (options) {
+            // Ensure number
+            fs_1.default.rmSync(USER_CFG_DIR + '/history.json');
+            console.log('Purged History');
+            return;
+        };
+        this.historyUndo = function (options) {
+            // Ensure number
+            options.undo = Number(options.undo) || 1;
+            let content = fs_1.default.readFileSync(USER_CFG_DIR + '/history.json', 'utf-8');
+            if (!content) {
+                console.log("WARNING: No history to undo!");
                 return;
             }
-            if (options.undo) {
-                // Ensure number
-                options.undo = Number(options.undo) || 1;
-                let content = fs_1.default.readFileSync(USER_CFG_DIR + '/history.json', 'utf-8');
-                if (!content) {
-                    console.log("WARNING: No history to undo!");
-                    return;
-                }
-                // History loaded in chronological order
-                let historyJSON = JSON.parse(content) || [];
-                const end = historyJSON.length - 1;
-                historyJSON = historyJSON.slice(options.undo, end);
-                fs_1.default.writeFileSync(USER_CFG_DIR + '/history.json', JSON.stringify(historyJSON, null, 2));
-                console.log("History undone!");
-            }
-            // Default to view
-            if (options.view) {
-                // Ensure number
-                options.view = Number(options.view) || 32;
-                const content = _loadHistory(options.view, false);
-                console.log(content);
-                return;
-            }
+            // History loaded in chronological order
+            let historyJSON = JSON.parse(content) || [];
+            const end = historyJSON.length - 1;
+            historyJSON = historyJSON.slice(options.undo, end);
+            fs_1.default.writeFileSync(USER_CFG_DIR + '/history.json', JSON.stringify(historyJSON, null, 2));
+            console.log("History undone!");
         };
         this.repeat = function () {
             const last = _loadHistory(1, true, true);
             console.log(last[0].llm);
         };
-        this.settings = function (options) {
-            let content;
-            if (options.delete) {
-                fs_1.default.rmSync(USER_CFG_DIR + '/settings.json');
-                content = 'Deleted Settings';
-            }
-            else {
-                content = fs_1.default.readFileSync(USER_CFG_DIR + '/settings.json', 'utf-8');
-            }
+        this.settingsView = function () {
+            let content = fs_1.default.readFileSync(USER_CFG_DIR + '/settings.json', 'utf-8');
             console.log(content);
-            console.log('Settings can be changed with the `set` command.');
+            console.log('Settings can be changed with the `settings` command.');
         };
-        this.setOpts = function (options) {
+        this.settingsPurge = function () {
+            fs_1.default.rmSync(USER_CFG_DIR + '/settings.json');
+            console.log("Purged settings!");
+        };
+        this.settings = function (options) {
             console.log(JSON.stringify(options));
             fs_1.default.writeFileSync(USER_CFG_DIR + '/settings.json', JSON.stringify(options, null, 2));
             console.log('Created a new settings file');

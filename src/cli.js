@@ -15,9 +15,18 @@ const program = new commander_1.Command();
 program
     .name('sllm')
     .description('CLI for OpenAI Large Language Models. v' + getPkgVer_js_1.default + ' \r\nCreated by Mathieu Dombrock 2023. GPL3 License.')
+    //.helpOption(false)
+    .addHelpCommand(false)
+    .addHelpText('after', '\nNote: All commands are prefixed with "." to avoid conflicting with prompts!')
     .version(getPkgVer_js_1.default);
 program
-    .command('prompt', { isDefault: true })
+    .command('.help')
+    .description('show sllm help')
+    .action(() => {
+    program.help();
+});
+program
+    .command('.prompt', { isDefault: true })
     .description('send a prompt (default command)')
     .argument('<prompt...>', 'the prompt text')
     .option('-v, --verbose', 'verbose output')
@@ -37,7 +46,7 @@ program
     sllm.completion(prompt, options);
 });
 program
-    .command('set')
+    .command('.settings')
     .description('set a persistant command option')
     .argument('<prompt...>', 'the prompt text')
     .option('-v, --verbose', 'verbose output')
@@ -54,41 +63,49 @@ program
     .option('-m, --model <model-name>', 'specify the model name', 'gpt-3.5-turbo')
     .option('--mock', 'dont actually send the prompt to the API')
     .action((options) => {
-    sllm.setOpts(options);
-});
-program
-    .command('settings')
-    .description('view the current settings that were changed via the `set` command')
-    .option('-d, --delete', 'Delete the current settings')
-    .action((options) => {
     sllm.settings(options);
 });
 program
-    .command('hist')
-    .description('manage the prompt / response history')
-    .option('-v, --view <number>', 'view the conversation history')
-    .option('-d, --delete', 'delete the conversation history')
-    .option('-u, --undo <count>', 'remove the most recent entry from the history')
-    .action((options) => {
-    sllm.history(options);
+    .command('.settings-view')
+    .description('view the current settings that were changed via the `settings` command')
+    .action(() => {
+    sllm.settingsView();
 });
 program
-    .command('alice bob')
-    .description('manage the prompt / response history')
-    .option('-v, --view <number>', 'view the conversation history')
-    .option('-d, --delete', 'delete the conversation history')
-    .option('-u, --undo <count>', 'remove the most recent entry from the history')
-    .action((options) => {
-    console.log('yee');
+    .command('.settings-purge')
+    .description('purge the current settings that were changed via the `settings` command')
+    .action(() => {
+    sllm.settingsPurge();
 });
 program
-    .command('purge')
+    .command('.history-view')
+    .description('view the conversation history')
+    .option('-n, --number <count>', 'how far back to read', '99')
+    .action((options) => {
+    sllm.historyView(options);
+});
+program
+    .command('.history-purge')
+    .description('view the conversation history')
+    .option('-n, --number <count>', 'how far back to read', '99')
+    .action((options) => {
+    sllm.historyPurge(options);
+});
+program
+    .command('.history-undo')
+    .description('undo the conversation history')
+    .option('-n, --number <count>', 'how far back to undo', '1')
+    .action((options) => {
+    sllm.historyUndo(options);
+});
+program
+    .command('.purge')
     .description('delete all history and settings')
     .action(() => {
     sllm.purge();
 });
 program
-    .command('count')
+    .command('.count')
     .description('estimate the tokens used by a prompt or file')
     .option('-p, --prompt <string...>', 'the prompt string to check')
     .option('-f, --file <path>', 'the file path to check')
@@ -98,13 +115,13 @@ program
     sllm.countTokens(options);
 });
 program
-    .command('repeat')
+    .command('.repeat')
     .description('repeat the last response')
     .action(() => {
     sllm.repeat();
 });
 program
-    .command('models')
+    .command('.models')
     .description('list the available models')
     .action(() => {
     sllm.listModels();

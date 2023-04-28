@@ -93,6 +93,7 @@ class SLLM {
 		// Make the request
 		let output = 'WARNING: Did not send!';
 		if (!options.mock) {		
+			console.log('Thinking...');
 			if(modelData.api === 'gpt'){
 				output = await this._sendReqGPT(prompt, options, modelData);
 			}
@@ -127,53 +128,48 @@ class SLLM {
 	/*
 		Command functions
 	*/
-	history: Function = function (options: any): void {
-		if (options.delete) {
-			// Ensure number
-			fs.rmSync(USER_CFG_DIR + '/history.json');
-			console.log('Deleted History');
+	historyView: Function = function(options: any): void {
+		// Ensure number
+		options.number = Number(options.view) || 32;
+		const content = _loadHistory(options.view, false);
+		console.log(content);
+		return;
+	}
+	historyPurge: Function = function(options: any): void {
+		// Ensure number
+		fs.rmSync(USER_CFG_DIR + '/history.json');
+		console.log('Purged History');
+		return;
+	}
+	historyUndo: Function = function(options: any): void {
+		// Ensure number
+		options.undo = Number(options.undo) || 1;
+		let content: string = fs.readFileSync(USER_CFG_DIR + '/history.json', 'utf-8');
+		if(!content){
+			console.log("WARNING: No history to undo!");
 			return;
 		}
-		if (options.undo){
-			// Ensure number
-			options.undo = Number(options.undo) || 1;
-			let content: string = fs.readFileSync(USER_CFG_DIR + '/history.json', 'utf-8');
-			if(!content){
-				console.log("WARNING: No history to undo!");
-				return;
-			}
-			// History loaded in chronological order
-			let historyJSON: any = JSON.parse(content) || [];
-			const end: number = historyJSON.length-1;
-			historyJSON = historyJSON.slice(options.undo, end);
-			fs.writeFileSync(USER_CFG_DIR + '/history.json', JSON.stringify(historyJSON, null, 2));
-			console.log("History undone!");
-		}
-		// Default to view
-		if (options.view) {
-			// Ensure number
-			options.view = Number(options.view) || 32;
-			const content = _loadHistory(options.view, false);
-			console.log(content);
-			return;
-		}
+		// History loaded in chronological order
+		let historyJSON: any = JSON.parse(content) || [];
+		const end: number = historyJSON.length-1;
+		historyJSON = historyJSON.slice(options.undo, end);
+		fs.writeFileSync(USER_CFG_DIR + '/history.json', JSON.stringify(historyJSON, null, 2));
+		console.log("History undone!");
 	}
 	repeat: Function = function (): void {
 		const last = _loadHistory(1, true, true);
 		console.log(last[0].llm);
 	}
-	settings: Function = function (options: any): void {
-		let content;
-		if (options.delete) {
-			fs.rmSync(USER_CFG_DIR + '/settings.json');
-			content = 'Deleted Settings';
-		} else {
-			content = fs.readFileSync(USER_CFG_DIR + '/settings.json', 'utf-8');
-		}
+	settingsView: Function = function (): void {
+		let content = fs.readFileSync(USER_CFG_DIR + '/settings.json', 'utf-8');
 		console.log(content);
-		console.log('Settings can be changed with the `set` command.');
+		console.log('Settings can be changed with the `settings` command.');
 	}
-	setOpts: Function = function(options: any): void {
+	settingsPurge: Function = function(): void{
+		fs.rmSync(USER_CFG_DIR + '/settings.json');
+		console.log("Purged settings!");
+	}
+	settings: Function = function(options: any): void {
 		console.log(JSON.stringify(options));
 		fs.writeFileSync(
 			USER_CFG_DIR + '/settings.json',
