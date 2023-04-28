@@ -66,10 +66,20 @@ program
 program
     .command('hist')
     .description('manage the prompt / response history')
-    .option('-v, --view <number>', 'view the prompt history', '8')
-    .option('-d, --delete', 'delete the prompt history')
+    .option('-v, --view <number>', 'view the conversation history')
+    .option('-d, --delete', 'delete the conversation history')
+    .option('-u, --undo <count>', 'remove the most recent entry from the history')
     .action((options) => {
     sllm.history(options);
+});
+program
+    .command('alice bob')
+    .description('manage the prompt / response history')
+    .option('-v, --view <number>', 'view the conversation history')
+    .option('-d, --delete', 'delete the conversation history')
+    .option('-u, --undo <count>', 'remove the most recent entry from the history')
+    .action((options) => {
+    console.log('yee');
 });
 program
     .command('purge')

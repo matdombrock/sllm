@@ -129,9 +129,25 @@ class SLLM {
 	*/
 	history: Function = function (options: any): void {
 		if (options.delete) {
+			// Ensure number
 			fs.rmSync(USER_CFG_DIR + '/history.json');
 			console.log('Deleted History');
 			return;
+		}
+		if (options.undo){
+			// Ensure number
+			options.undo = Number(options.undo) || 1;
+			let content: string = fs.readFileSync(USER_CFG_DIR + '/history.json', 'utf-8');
+			if(!content){
+				console.log("WARNING: No history to undo!");
+				return;
+			}
+			// History loaded in chronological order
+			let historyJSON: any = JSON.parse(content) || [];
+			const end: number = historyJSON.length-1;
+			historyJSON = historyJSON.slice(options.undo, end);
+			fs.writeFileSync(USER_CFG_DIR + '/history.json', JSON.stringify(historyJSON, null, 2));
+			console.log("History undone!");
 		}
 		// Default to view
 		if (options.view) {
@@ -415,6 +431,7 @@ function _loadHistory(count = 1, reverse = true, json = false) {
 	}
 	let historyJSON = JSON.parse(content) || [];
 	// Always reverse history first
+	// Reverse chronological
 	historyJSON.reverse();
 	// Slice the history
 	historyJSON = historyJSON.slice(0, count);
