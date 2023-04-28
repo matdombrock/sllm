@@ -1,6 +1,0 @@
-{
-    "like_five":"Answer this as if I'm 5 years old:",
-    "context":"In the context of",
-    "domain":"In the domain of",
-    "expert":"Act as an expert on {PROMPT}, the question I need you to answer is:"
-}

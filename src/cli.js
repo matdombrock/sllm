@@ -12,7 +12,6 @@ const getPkgVer_js_1 = __importDefault(require("./util/getPkgVer.js"));
 const sllm_js_1 = __importDefault(require("./sllm.js"));
 const sllm = new sllm_js_1.default;
 const program = new commander_1.Command();
-console.log("Thinking...");
 program
     .name('sllm')
     .description('CLI for OpenAI Large Language Models. v' + getPkgVer_js_1.default + ' \r\nCreated by Mathieu Dombrock 2023. GPL3 License.')
