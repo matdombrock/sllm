@@ -17,12 +17,12 @@
   "author": "Mathieu Dombrock",
   "license": "GPL3",
   "dependencies": {
-    "@types/commander": "^2.12.2",
     "commander": "^10.0.0",
     "gpt-3-encoder": "^1.1.4",
     "openai": "^3.1.0"
   },
   "devDependencies": {
+    "@types/commander": "^2.12.2",
     "@types/node": "^18.16.2",
     "eslint": "^8.35.0",
     "typescript": "^5.0.4"
