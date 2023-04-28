@@ -70,34 +70,45 @@ According to the latest estimates, there are approximately 1.4 billion people li
 To enable a "chat mode" similar to chatGPT, run the following command:
 
 ```
-sllm set -H 3
+sllm settings -H 3
 ```
 
 This will remind the LLM about the last 3 prompts it was given. 
 
 ## Overview
 ```
-$ sllm -h
-
+$ sllm --help
 Usage: sllm [options] [command]
 
-CLI for OpenAI Large Language Models. v1.0.3
+
+         ____    
+    ___ / / /_ _ 
+   (_-</ / /  ' \
+  /___/_/_/_/_/_/
+
+CLI for OpenAI Large Language Models. v2.0.2
 Created by Mathieu Dombrock 2023. GPL3 License.
 
+
 Options:
-  -V, --version                 output the version number
-  -h, --help                    display help for command
+  -V, --version                  output the version number
+  -h, --help                     display help for command
 
 Commands:
-  prompt [options] <prompt...>  send a prompt (default command)
-  set [options] <prompt...>     set a persistant command option
-  settings [options]            view the current settings that were changed via the `set` command
-  hist [options]                manage the prompt / response history
-  purge                         delete all history and settings
-  count [options]               estimate the tokens used by a prompt or file
-  repeat                        repeat the last response
-  models                        list the available models
-  help [command]                display help for command
+  .help                          show sllm help
+  .prompt [options] <prompt...>  send a prompt (default command)
+  .settings [options]            set a persistant command option
+  .settings-view                 view the current settings that were changed via the `settings` command
+  .settings-purge                purge the current settings that were changed via the `settings` command
+  .history-view [options]        view the conversation history
+  .history-purge [options]       view the conversation history
+  .history-undo [options]        undo the conversation history
+  .purge                         delete all history and settings
+  .count [options]               estimate the tokens used by a prompt or file
+  .repeat                        repeat the last response
+  .models                        list the available models
+
+Note: All commands are prefixed with "." to avoid conflicting with prompts!
 
 ```
 
@@ -134,9 +145,8 @@ More info: https://platform.openai.com/docs/models/
 ## Prompt
 
 ```
-$ sllm prompt -h
-
-Usage: sllm prompt [options] <prompt...>
+$ sllm .prompt --help
+Usage: sllm .prompt [options] <prompt...>
 
 send a prompt (default command)
 
@@ -213,9 +223,9 @@ $ sllm what is this file about? -f cfg.txt
 If you want to estimate how many tokens a prompt or file will consume, you can use the `sllm count` command.
 
 ```
-$ sllm help count
+$ sllm .count --help
 
-Usage: sllm count [options]
+Usage: sllm .count [options]
 
 estimate the tokens used by a prompt or file
 
