@@ -1,13 +1,13 @@
 {
   "name": "sllm",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "",
   "main": "llm.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
-    "sllm": "./sllm.js"
+    "sllm": "./cli.js"
   },
   "repository": {
     "type": "git",
@@ -17,11 +17,14 @@
   "author": "",
   "license": "GPL3",
   "dependencies": {
+    "@types/commander": "^2.12.2",
     "commander": "^10.0.0",
     "gpt-3-encoder": "^1.1.4",
     "openai": "^3.1.0"
   },
   "devDependencies": {
-    "eslint": "^8.35.0"
+    "@types/node": "^18.16.2",
+    "eslint": "^8.35.0",
+    "typescript": "^5.0.4"
   }
 }
