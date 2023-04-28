@@ -26,7 +26,7 @@ I made this for the following reasons:
 - Directly read and write local files
 - I don't always have easy access to a GUI
 
-> $ sllm what would be the avantage of talking to a LLM via the command line?
+> $ sllm what would be the advantage of talking to a LLM via the command line?
 > 
 > The advantage of talking to a LLM via the command line is that it allows for a more efficient and direct way of communicating. It also allows for more precise and specific commands to be used, which can help to quickly get the desired results.
 
@@ -97,7 +97,7 @@ Options:
 Commands:
   .help                          show sllm help
   .prompt [options] <prompt...>  send a prompt (default command)
-  .settings [options]            set a persistant command option
+  .settings [options]            set a persistent command option
   .settings-view                 view the current settings that were changed via the `settings` command
   .settings-purge                purge the current settings that were changed via the `settings` command
   .history-view [options]        view the conversation history
@@ -156,7 +156,7 @@ Arguments:
 Options:
   -v, --verbose               verbose output
   -x, --max-tokens <number>   maximum tokens to use in response (default: "256")
-  -X, --unlimited             do not limit tokens used in reponse
+  -X, --unlimited             do not limit tokens used in response
   -t, --temperature <number>  temperature to use (default: "0.2")
   -c, --context <string...>   context to prepend
   -d, --domain <string...>    subject domain to prepend
