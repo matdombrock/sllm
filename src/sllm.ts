@@ -52,7 +52,7 @@ class SLLM {
 		if(!modelData){
 			throw 'Error: Unknown model: '+options.model;
 		}
-		// Preproceess the prompt
+		// Preprocess the prompt
 		if (options.likeImFive) {
 			prompt = _preLike5(prompt);
 		}
@@ -69,7 +69,7 @@ class SLLM {
 		// Append History
 		const ogPrompt = prompt; // Cache for history etc
 		if (options.history) {
-			prompt =_loadHistory(options.history, false) + prompt; // Revrsed
+			prompt =_loadHistory(options.history, false) + prompt; // Reversed
 		}
 	
 		// Count total prompt tokens and append to the maxTokens value
@@ -83,7 +83,7 @@ class SLLM {
 		}
 		const totalTokens = options.maxTokens + tokenCount;
 	
-		// Apply verbos outout
+		// Apply verbose output
 		if (options.verbose) {
 			_verbose(ogPrompt, options, encoded, totalTokens);
 		}
@@ -116,7 +116,7 @@ class SLLM {
 			output = 'WARNING: Something went wrong! Try Again.';
 		}
 	
-		// Trim whitesapce
+		// Trim whitespace
 		output = output.trim();
 		// Log output
 		console.log('');// This line intentionally left blank

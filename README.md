@@ -163,7 +163,7 @@ Options:
   -e, --expert <string...>    act as an expert on this domain
   -5, --like-im-five          explain it like I'm 5 years old
   -H, --history <number>      prepend history (chatGPT mode)
-  -f, --file <path>           preprend the given file contents
+  -f, --file <path>           prepend the given file contents
   -T, --trim                  automatically trim the given file contents
   -m, --model <model-name>    specify the model name (default: "gpt-3.5-turbo")
   --mock                      dont actually send the prompt to the API
@@ -175,14 +175,14 @@ Options:
 
 You can prepend a reference to a file with the `-f` or `--file` option.
 
-However, be aware that files can not exceed 4k tokens. To the best of my knowlege, there is no way to get the GPT3 API to process more than 4096 tokens at once which means that this is a hard limitation and it would not be possible to get a meaningful analysis of a file that exceeds 4k tokens. 
+However, be aware that files can not exceed 4k tokens. To the best of my knowledge, there is no way to get the GPT3 API to process more than 4096 tokens at once which means that this is a hard limitation and it would not be possible to get a meaningful analysis of a file that exceeds 4k tokens. 
 
 **NOTE: At the time of writing, sending a file that contains 4k tokens would cost about $0.08 (USD). See [OpenAI Pricing](https://openai.com/pricing) for more info.**
 
 ### Trimming Files to Save Tokens
 If your files are too large or you simply want to save a few tokens, you can try adding the `--trim` flag when loading a file. This command will attempt to remove all white spaces, tabs and new lines from the file. This might confuse the LLM so it's typically better to avoid this option unless needed. 
 
-Depending on the type of file you want to analyse, you might also try minifying the file before running it through sllm. 
+Depending on the type of file you want to analyze, you might also try minifying the file before running it through sllm. 
 
 ### File Examples:
 ```
@@ -190,7 +190,7 @@ $ sllm write a summary of this file -f sllm.js
 
   This file is a Node.js script that provides a command line interface (CLI) for interacting with OpenAI's GPT-3 API.
 
-$ sllm what dependancies does this have -f ./package.json
+$ sllm what dependencies does this have -f ./package.json
 
  This package.json file has two dependencies: gpt-3-encoder and openai.
 
