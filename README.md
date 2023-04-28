@@ -5,7 +5,7 @@ A command line interface for the OpenAI Large Language Models that emulates some
 
 *Note: This project has recently been updated to default to the GPT3.5-Turbo Model. You can access other models (**including GPT4**) with the `--model` option.*
 
-![screenshot](docs/sllm-ss.png)
+![screenshot](.docs/sllm-ss.png)
 
 In addition to providing a simple interface for talking with GPT, this tool also offers a few extra features built on top of the GPT APIs. 
 
@@ -70,7 +70,7 @@ According to the latest estimates, there are approximately 1.4 billion people li
 To enable a "chat mode" similar to chatGPT, run the following command:
 
 ```
-sllm settings -H 3
+sllm .settings -H 3
 ```
 
 This will remind the LLM about the last 3 prompts it was given. 
