@@ -27,7 +27,7 @@ class SLLM {
 	/*
 		Main Prompt Function
 	*/
-	completion: Function = async function (promptArr: Array<string>, options: any): Promise<void> {
+	public async completion(promptArr: Array<string>, options: any): Promise<void> {
 		// Join prompt into single string
 		let prompt: string = promptArr.join(' ');
 	
@@ -41,7 +41,7 @@ class SLLM {
 	
 		// Prepend a file if required
 		if (options.file) {
-			prompt = _loadFile(options);
+			prompt = _loadFile(prompt, options);
 		}
 		// Check model aliases
 		if(modelAlias[options.model]){
@@ -95,10 +95,10 @@ class SLLM {
 		if (!options.mock) {		
 			console.log('Thinking...');
 			if(modelData.api === 'gpt'){
-				output = await this._sendReqGPT(prompt, options, modelData);
+				output = await this.sendReqGPT(prompt, options, modelData);
 			}
 			else if(modelData.api === 'davinci'){
-				output = await this._sendReqDavinci(prompt, options, modelData);
+				output = await this.sendReqDavinci(prompt, options, modelData);
 			}
 			else{
 				throw 'Error: Unknown API for model: '+options.model;
@@ -128,20 +128,20 @@ class SLLM {
 	/*
 		Command functions
 	*/
-	historyView: Function = function(options: any): void {
+	public historyView(options: any): void {
 		// Ensure number
 		options.number = Number(options.view) || 32;
 		const content = _loadHistory(options.view, false);
 		console.log(content);
 		return;
 	}
-	historyPurge: Function = function(options: any): void {
+	public historyPurge(options: any): void {
 		// Ensure number
 		fs.rmSync(USER_CFG_DIR + '/history.json');
 		console.log('Purged History');
 		return;
 	}
-	historyUndo: Function = function(options: any): void {
+	public historyUndo(options: any): void {
 		// Ensure number
 		options.undo = Number(options.undo) || 1;
 		let content: string = fs.readFileSync(USER_CFG_DIR + '/history.json', 'utf-8');
@@ -156,20 +156,20 @@ class SLLM {
 		fs.writeFileSync(USER_CFG_DIR + '/history.json', JSON.stringify(historyJSON, null, 2));
 		console.log("History undone!");
 	}
-	repeat: Function = function (): void {
+	public repeat(): void {
 		const last = _loadHistory(1, true, true);
 		console.log(last[0].llm);
 	}
-	settingsView: Function = function (): void {
+	public settingsView(): void {
 		let content = fs.readFileSync(USER_CFG_DIR + '/settings.json', 'utf-8');
 		console.log(content);
 		console.log('Settings can be changed with the `settings` command.');
 	}
-	settingsPurge: Function = function(): void{
+	public settingsPurge(): void{
 		fs.rmSync(USER_CFG_DIR + '/settings.json');
 		console.log("Purged settings!");
 	}
-	settings: Function = function(options: any): void {
+	public settings(options: any): void {
 		console.log(JSON.stringify(options));
 		fs.writeFileSync(
 			USER_CFG_DIR + '/settings.json',
@@ -177,12 +177,12 @@ class SLLM {
 		);
 		console.log('Created a new settings file');
 	}
-	purge: Function = function(): void {
+	public purge(): void {
 		fs.rmSync(USER_CFG_DIR + '/settings.json');
 		fs.rmSync(USER_CFG_DIR + '/history.json');
 		console.log('Purged!');
 	}
-	countTokens: Function = function(options: any): void {
+	public countTokens(options: any): void {
 		let tokens = 0;
 		// Check model aliases
 		if(modelAlias[options.model]){
@@ -215,7 +215,7 @@ class SLLM {
 		console.log('Estimated Tokens: ' + tokens + '/' + maxTokens);
 		console.log('Max Reply: ' + (maxTokens - tokens));
 	}
-	listModels: Function = function (): void{
+	public listModels(): void{
 		console.log('Available Models:');
 		for(const [modelName, modelData] of Object.entries(modelMap)){
 			let alias = '';
@@ -241,7 +241,7 @@ class SLLM {
 	API Wrappers
 	*/
 	// Wrapper for completion
-	_sendReqDavinci = async function (prompt: string, options:any, modelData:any): Promise<string>{
+	private async sendReqDavinci(prompt: string, options:any, modelData:any): Promise<string>{
 		const reqData = {
 			model: modelData.model,
 			prompt: prompt,
@@ -266,7 +266,7 @@ class SLLM {
 		return completion.data.choices[0].text || "No response!";
 	}
 	// Wrapper for chat completion
-	_sendReqGPT: Function = async function (prompt:string, options:any, modelData:any): Promise<string>{
+	private async sendReqGPT(prompt:string, options:any, modelData:any): Promise<string>{
 		// Use gpt3.5 by default
 		const reqData: CreateChatCompletionRequest = {
 			model: modelData.model,
@@ -330,7 +330,7 @@ function _verbose(ogPrompt, options, encoded, totalTokens){
 
 // Load a file from th FS
 // Handle trim if specified
-function _loadFile(options){
+function _loadFile(prompt:string, options){
 	let fileContents = '';
 	const fileLoc = options.file;
 	if (fs.existsSync(fileLoc)) {
@@ -339,10 +339,10 @@ function _loadFile(options){
 	if(options.trim){
 		fileContents = _trim(fileContents);
 	}
-	let prompt ='```\r\n' +
+	prompt ='```\r\n' +
 	fileContents +
 	'```\r\n' +
-	options.prompt;
+	prompt;
 	return prompt;
 }
 function _trim(str){

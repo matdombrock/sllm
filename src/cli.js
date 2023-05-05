@@ -40,7 +40,7 @@ program
     .argument('<prompt...>', 'the prompt text')
     .option('-v, --verbose', 'verbose output')
     .option('-x, --max-tokens <number>', 'maximum tokens to use in response', '256')
-    .option('-X, --unlimited', 'do not limit tokens used in reponse')
+    .option('-X, --unlimited', 'do not limit tokens used in response')
     .option('-t, --temperature <number>', 'temperature to use', '0.2')
     .option('-c, --context <string...>', 'context to prepend')
     .option('-d, --domain <string...>', 'subject domain to prepend')
@@ -56,10 +56,10 @@ program
 });
 program
     .command('.settings')
-    .description('set a persistant command option')
+    .description('set a persistent command option')
     .option('-v, --verbose', 'verbose output')
     .option('-x, --max-tokens <number>', 'maximum tokens to use in response', '256')
-    .option('-X, --no-limit', 'do not limit tokens used in reponse')
+    .option('-X, --no-limit', 'do not limit tokens used in response')
     .option('-t, --temperature <number>', 'temperature to use', '0.2')
     .option('-c, --context <string...>', 'context to prepend')
     .option('-d, --domain <string...>', 'subject domain to prepend')
