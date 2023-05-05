@@ -2,12 +2,12 @@
   "name": "sllm",
   "version": "2.0.6",
   "description": "A CLI for OpenAI LLMs",
-  "main": "./src/cli.js",
+  "main": "./dist/cli.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
-    "sllm": "./src/cli.js"
+    "sllm": "./dist/cli.js"
   },
   "repository": {
     "type": "git",

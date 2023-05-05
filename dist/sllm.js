@@ -17,18 +17,20 @@ const fs_1 = __importDefault(require("fs"));
 const os_1 = __importDefault(require("os"));
 const gpt_3_encoder_1 = require("gpt-3-encoder");
 const openai_1 = require("openai");
-const modelMap_js_1 = require("./modelMap.js");
+const models_js_1 = require("./models.js");
 const USER_CFG_DIR = os_1.default.homedir() + '/.config/sllm';
 const MAX_HISTORY_STORE = 64;
-// Ensure we have an api key env var
-_ensureAPIKey();
-// Ensure we have our needed files
-_ensureFiles();
 const configuration = new openai_1.Configuration({
     apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new openai_1.OpenAIApi(configuration);
 class SLLM {
+    constructor() {
+        // Ensure we have an api key env var
+        this.ensureAPIKey();
+        // Ensure we have our needed files
+        this.ensureFiles();
+    }
     /*
         Main Prompt Function
     */
@@ -37,41 +39,41 @@ class SLLM {
             // Join prompt into single string
             let prompt = promptArr.join(' ');
             // Set static options
-            options = _loadOpts(options);
+            options = this.loadOpts(options);
             // Ensure numbers
             options.maxTokens = Number(options.maxTokens) || 256;
             options.temperature = Number(options.temperature) || 0.2;
             options.history = Number(options.history) || 0;
             // Prepend a file if required
             if (options.file) {
-                prompt = _loadFile(prompt, options);
+                prompt = this.loadFile(prompt, options);
             }
             // Check model aliases
-            if (modelMap_js_1.modelAlias[options.model]) {
-                options.model = modelMap_js_1.modelAlias[options.model];
+            if (models_js_1.modelAlias[options.model]) {
+                options.model = models_js_1.modelAlias[options.model];
             }
             // Load models data
-            const modelData = modelMap_js_1.modelMap[options.model];
+            const modelData = models_js_1.modelMap[options.model];
             if (!modelData) {
                 throw 'Error: Unknown model: ' + options.model;
             }
             // Preprocess the prompt
             if (options.likeImFive) {
-                prompt = _preLike5(prompt);
+                prompt = this.preLike5(prompt);
             }
             if (options.context) {
-                prompt = _preContext(prompt, options.context);
+                prompt = this.preContext(prompt, options.context);
             }
             if (options.domain) {
-                prompt = _preDomain(prompt, options.domain);
+                prompt = this.preDomain(prompt, options.domain);
             }
             if (options.expert) {
-                prompt = _preExpert(prompt, options.expert);
+                prompt = this.preExpert(prompt, options.expert);
             }
             // Append History
             const ogPrompt = prompt; // Cache for history etc
             if (options.history) {
-                prompt = _loadHistory(options.history, false) + prompt; // Reversed
+                prompt = this.loadHistory(options.history, false) + prompt; // Reversed
             }
             // Count total prompt tokens and append to the maxTokens value
             const encoded = (0, gpt_3_encoder_1.encode)(prompt);
@@ -85,9 +87,9 @@ class SLLM {
             const totalTokens = options.maxTokens + tokenCount;
             // Apply verbose output
             if (options.verbose) {
-                _verbose(ogPrompt, options, encoded, totalTokens);
+                this.verbose(ogPrompt, options, encoded, totalTokens);
             }
-            if (_overTokenLimit(totalTokens, modelData, options)) {
+            if (this.overTokenLimit(totalTokens, modelData, options)) {
                 return;
             }
             // Make the request
@@ -119,7 +121,7 @@ class SLLM {
             console.log(''); // This line intentionally left blank
             console.log(output);
             // Log history
-            _logHistory(ogPrompt, output);
+            this.logHistory(ogPrompt, output);
         });
     }
     /*
@@ -128,7 +130,7 @@ class SLLM {
     historyView(options) {
         // Ensure number
         options.number = Number(options.view) || 32;
-        const content = _loadHistory(options.view, false);
+        const content = this.loadHistory(options.view, false);
         console.log(content);
         return;
     }
@@ -154,7 +156,7 @@ class SLLM {
         console.log("History undone!");
     }
     repeat() {
-        const last = _loadHistory(1, true, true);
+        const last = this.loadHistory(1, true, true);
         console.log(last[0].llm);
     }
     settingsView() {
@@ -179,11 +181,11 @@ class SLLM {
     countTokens(options) {
         let tokens = 0;
         // Check model aliases
-        if (modelMap_js_1.modelAlias[options.model]) {
-            options.model = modelMap_js_1.modelAlias[options.model];
+        if (models_js_1.modelAlias[options.model]) {
+            options.model = models_js_1.modelAlias[options.model];
         }
         // Load models data
-        const modelData = modelMap_js_1.modelMap[options.model];
+        const modelData = models_js_1.modelMap[options.model];
         if (!modelData) {
             throw 'Error: Unknown model: ' + options.model;
         }
@@ -195,7 +197,7 @@ class SLLM {
         if (options.file) {
             let fileContents = fs_1.default.readFileSync(options.file, 'utf-8');
             if (options.trim) {
-                fileContents = _trim(fileContents);
+                fileContents = this.trim(fileContents);
             }
             const encoded = (0, gpt_3_encoder_1.encode)(fileContents);
             tokens += encoded.length;
@@ -211,9 +213,9 @@ class SLLM {
     }
     listModels() {
         console.log('Available Models:');
-        for (const [modelName, modelData] of Object.entries(modelMap_js_1.modelMap)) {
+        for (const [modelName, modelData] of Object.entries(models_js_1.modelMap)) {
             let alias = '';
-            for (const [aliasName, aliasModelName] of Object.entries(modelMap_js_1.modelAlias)) {
+            for (const [aliasName, aliasModelName] of Object.entries(models_js_1.modelAlias)) {
                 if (aliasModelName === modelName) {
                     alias = aliasName;
                 }
@@ -291,147 +293,147 @@ class SLLM {
             return ((_c = (_b = (_a = completion === null || completion === void 0 ? void 0 : completion.data) === null || _a === void 0 ? void 0 : _a.choices[0]) === null || _b === void 0 ? void 0 : _b.message) === null || _c === void 0 ? void 0 : _c.content) || "No response";
         });
     }
+    /*
+    Prompt Pre-processing
+    */
+    preLike5(prompt) {
+        return 'Answer this as if I\'m five years old: ' + prompt;
+    }
+    preContext(prompt, context) {
+        return 'In the context of ' + context.join(' ') + ', ' + prompt;
+    }
+    preDomain(prompt, domain) {
+        return 'In the domain of ' + domain.join(' ') + ', ' + prompt;
+    }
+    preExpert(prompt, expert) {
+        return 'Act as an expert on ' +
+            expert.join(' ') +
+            '. The question I need you to answer is: ' +
+            prompt;
+    }
+    /*
+    Utility Functions
+    */
+    // Handle verbose logging
+    verbose(ogPrompt, options, encoded, totalTokens) {
+        console.log('>> ' + ogPrompt + ' <<');
+        console.log(JSON.stringify(options, null, 2));
+        console.log('Encoded Tokens: ' + encoded.length);
+        console.log('Total Potential Tokens: ' + totalTokens);
+        console.log('Sending Prompt...');
+        console.log('-------\r\n');
+    }
+    // Load a file from th FS
+    // Handle trim if specified
+    loadFile(prompt, options) {
+        let fileContents = '';
+        const fileLoc = options.file;
+        if (fs_1.default.existsSync(fileLoc)) {
+            fileContents = fs_1.default.readFileSync(fileLoc, 'utf-8');
+        }
+        if (options.trim) {
+            fileContents = this.trim(fileContents);
+        }
+        prompt = '```\r\n' +
+            fileContents +
+            '```\r\n' +
+            prompt;
+        return prompt;
+    }
+    // Check if we are over the token limit
+    // Return true if we are over the token limit
+    overTokenLimit(totalTokens, modelData, options) {
+        if (options.maxTokens > modelData.maxTokens) {
+            console.log(`ERROR: You requested ${options.maxTokens} which exceeds the model limit of ${modelData.maxTokens}`);
+            return true;
+        }
+        if (totalTokens > modelData.maxTokens - 96) {
+            console.log('ERROR: Max Tokens Exceeded ' + '(' + totalTokens + ')');
+            console.log('Please limit your prompt');
+            if (options.history) {
+                console.log('Trying running with history off!');
+            }
+            return true;
+        }
+        return false;
+    }
+    // Ensure we have the needed files 
+    // Create them if we have to
+    ensureFiles() {
+        if (!fs_1.default.existsSync(USER_CFG_DIR)) {
+            // Create the dir
+            fs_1.default.mkdirSync(USER_CFG_DIR);
+        }
+        if (!fs_1.default.existsSync(USER_CFG_DIR + '/history.json')) {
+            // Create the file
+            fs_1.default.writeFileSync(USER_CFG_DIR + '/history.json', '[]');
+        }
+        if (!fs_1.default.existsSync(USER_CFG_DIR + '/settings.json')) {
+            // Create the file
+            fs_1.default.writeFileSync(USER_CFG_DIR + '/settings.json', '{}');
+        }
+    }
+    // Ensure we have the API key setup
+    ensureAPIKey() {
+        if (!process.env.OPENAI_API_KEY) {
+            let err = 'ERROR: OPENAI_API_KEY unset\r\n';
+            err += 'To set, use the command:\r\n';
+            err += 'export OPENAI_API_KEY=<your_key>\r\n';
+            err += 'https://platform.openai.com/account/api-keys';
+            console.log(err);
+            process.exit();
+        }
+    }
+    // Overwrite the CLI options with those saved in the file
+    loadOpts(options) {
+        const content = fs_1.default.readFileSync(USER_CFG_DIR + '/settings.json', 'utf-8');
+        const optJSON = JSON.parse(content);
+        options = Object.assign(optJSON, options);
+        return options;
+    }
+    // Record the chat history to the local log
+    logHistory(ogPrompt, output) {
+        const histNew = {
+            user: ogPrompt,
+            llm: output,
+        };
+        const historyJSON = this.loadHistory(MAX_HISTORY_STORE, false, true);
+        historyJSON.push(histNew);
+        fs_1.default.writeFileSync(USER_CFG_DIR + '/history.json', JSON.stringify(historyJSON, null, 2));
+    }
+    // Load history from the local log
+    loadHistory(count = 1, reverse = true, json = false) {
+        let content = fs_1.default.readFileSync(USER_CFG_DIR + '/history.json', 'utf-8');
+        if (!content) {
+            console.log('WARNING: Can not read history file!');
+            content = '[]';
+        }
+        let historyJSON = JSON.parse(content) || [];
+        // Always reverse history first
+        // Reverse chronological
+        historyJSON.reverse();
+        // Slice the history
+        historyJSON = historyJSON.slice(0, count);
+        // Undo reverse if needed
+        if (reverse === false) {
+            historyJSON.reverse();
+        }
+        if (json) {
+            // Return json
+            return historyJSON;
+        }
+        let historyStr = '';
+        for (const item of historyJSON) {
+            historyStr += '_user_: ' + item.user;
+            historyStr += '\r\n';
+            historyStr += '_llm_: ' + item.llm;
+            historyStr += '\r\n';
+        }
+        return historyStr;
+    }
+    trim(str) {
+        return str.replace((/  |\r\n|\n|\r/gm), "");
+    }
 }
 ;
 exports.default = SLLM;
-/*
-    Prompt Pre-processing
-*/
-function _preLike5(prompt) {
-    return 'Answer this as if I\'m five years old: ' + prompt;
-}
-function _preContext(prompt, context) {
-    return 'In the context of ' + context.join(' ') + ', ' + prompt;
-}
-function _preDomain(prompt, domain) {
-    return 'In the domain of ' + domain.join(' ') + ', ' + prompt;
-}
-function _preExpert(prompt, expert) {
-    return 'Act as an expert on ' +
-        expert.join(' ') +
-        '. The question I need you to answer is: ' +
-        prompt;
-}
-/*
-    Utility Functions
-*/
-// Handle verbose logging
-function _verbose(ogPrompt, options, encoded, totalTokens) {
-    console.log('>> ' + ogPrompt + ' <<');
-    console.log(JSON.stringify(options, null, 2));
-    console.log('Encoded Tokens: ' + encoded.length);
-    console.log('Total Potential Tokens: ' + totalTokens);
-    console.log('Sending Prompt...');
-    console.log('-------\r\n');
-}
-// Load a file from th FS
-// Handle trim if specified
-function _loadFile(prompt, options) {
-    let fileContents = '';
-    const fileLoc = options.file;
-    if (fs_1.default.existsSync(fileLoc)) {
-        fileContents = fs_1.default.readFileSync(fileLoc, 'utf-8');
-    }
-    if (options.trim) {
-        fileContents = _trim(fileContents);
-    }
-    prompt = '```\r\n' +
-        fileContents +
-        '```\r\n' +
-        prompt;
-    return prompt;
-}
-function _trim(str) {
-    return str.replace((/  |\r\n|\n|\r/gm), "");
-}
-// Check if we are over the token limit
-// Return true if we are over the token limit
-function _overTokenLimit(totalTokens, modelData, options) {
-    if (options.maxTokens > modelData.maxTokens) {
-        console.log(`ERROR: You requested ${options.maxTokens} which exceeds the model limit of ${modelData.maxTokens}`);
-        return true;
-    }
-    if (totalTokens > modelData.maxTokens - 96) {
-        console.log('ERROR: Max Tokens Exceeded ' + '(' + totalTokens + ')');
-        console.log('Please limit your prompt');
-        if (options.history) {
-            console.log('Trying running with history off!');
-        }
-        return true;
-    }
-    return false;
-}
-// Ensure we have the needed files 
-// Create them if we have to
-function _ensureFiles() {
-    if (!fs_1.default.existsSync(USER_CFG_DIR)) {
-        // Create the dir
-        fs_1.default.mkdirSync(USER_CFG_DIR);
-    }
-    if (!fs_1.default.existsSync(USER_CFG_DIR + '/history.json')) {
-        // Create the file
-        fs_1.default.writeFileSync(USER_CFG_DIR + '/history.json', '[]');
-    }
-    if (!fs_1.default.existsSync(USER_CFG_DIR + '/settings.json')) {
-        // Create the file
-        fs_1.default.writeFileSync(USER_CFG_DIR + '/settings.json', '{}');
-    }
-}
-// Ensure we have the API key setup
-function _ensureAPIKey() {
-    if (!process.env.OPENAI_API_KEY) {
-        let err = 'ERROR: OPENAI_API_KEY unset\r\n';
-        err += 'To set, use the command:\r\n';
-        err += 'export OPENAI_API_KEY=<your_key>\r\n';
-        err += 'https://platform.openai.com/account/api-keys';
-        console.log(err);
-        process.exit();
-    }
-}
-// Overwrite the CLI options with those saved in the file
-function _loadOpts(options) {
-    const content = fs_1.default.readFileSync(USER_CFG_DIR + '/settings.json', 'utf-8');
-    const optJSON = JSON.parse(content);
-    options = Object.assign(optJSON, options);
-    return options;
-}
-// Record the chat history to the local log
-function _logHistory(ogPrompt, output) {
-    const histNew = {
-        user: ogPrompt,
-        llm: output,
-    };
-    const historyJSON = _loadHistory(MAX_HISTORY_STORE, false, true);
-    historyJSON.push(histNew);
-    fs_1.default.writeFileSync(USER_CFG_DIR + '/history.json', JSON.stringify(historyJSON, null, 2));
-}
-// Load history from the local log
-function _loadHistory(count = 1, reverse = true, json = false) {
-    let content = fs_1.default.readFileSync(USER_CFG_DIR + '/history.json', 'utf-8');
-    if (!content) {
-        console.log('WARNING: Can not read history file!');
-        content = '[]';
-    }
-    let historyJSON = JSON.parse(content) || [];
-    // Always reverse history first
-    // Reverse chronological
-    historyJSON.reverse();
-    // Slice the history
-    historyJSON = historyJSON.slice(0, count);
-    // Undo reverse if needed
-    if (reverse === false) {
-        historyJSON.reverse();
-    }
-    if (json) {
-        // Return json
-        return historyJSON;
-    }
-    let historyStr = '';
-    for (const item of historyJSON) {
-        historyStr += '_user_: ' + item.user;
-        historyStr += '\r\n';
-        historyStr += '_llm_: ' + item.llm;
-        historyStr += '\r\n';
-    }
-    return historyStr;
-}

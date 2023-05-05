@@ -1,4 +1,13 @@
-export const modelMap = {
+export interface ModelInfo{
+	model: string,
+	api: string,
+	maxTokens:number,
+	beta: boolean
+}
+export interface Model{
+	[key:string]: ModelInfo
+}
+export const modelMap:Model = {
 	'text-davinci-002':{
 		model: 'text-davinci-002',
 		api: 'davinci',
