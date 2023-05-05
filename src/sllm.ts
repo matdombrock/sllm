@@ -7,21 +7,15 @@ import { Configuration, CreateChatCompletionRequest, OpenAIApi } from 'openai';
 
 import { modelMap, modelAlias, ModelInfo } from './models.js';
 
-const USER_CFG_DIR: string = os.homedir() + '/.config/sllm';
-
-const MAX_HISTORY_STORE: number = 64;
-
-
-
-const configuration = new Configuration({
-	apiKey: process.env.OPENAI_API_KEY,
-});
-
-const openai = new OpenAIApi(configuration);
-
-
 class SLLM {
+	private USER_CFG_DIR: string = os.homedir() + '/.config/sllm';
+	private MAX_HISTORY_STORE: number = 64;
+	private openai;
+	private configuration = new Configuration({
+		apiKey: process.env.OPENAI_API_KEY,
+	});
 	constructor(){
+		this.openai = new OpenAIApi(this.configuration)
 		// Ensure we have an api key env var
 		this.ensureAPIKey();
 		// Ensure we have our needed files
@@ -140,14 +134,14 @@ class SLLM {
 	}
 	public historyPurge(options: any): void {
 		// Ensure number
-		fs.rmSync(USER_CFG_DIR + '/history.json');
+		fs.rmSync(this.USER_CFG_DIR + '/history.json');
 		console.log('Purged History');
 		return;
 	}
 	public historyUndo(options: any): void {
 		// Ensure number
 		options.undo = Number(options.undo) || 1;
-		let content: string = fs.readFileSync(USER_CFG_DIR + '/history.json', 'utf-8');
+		let content: string = fs.readFileSync(this.USER_CFG_DIR + '/history.json', 'utf-8');
 		if(!content){
 			console.log("WARNING: No history to undo!");
 			return;
@@ -156,7 +150,7 @@ class SLLM {
 		let historyJSON: any = JSON.parse(content) || [];
 		const end: number = historyJSON.length-1;
 		historyJSON = historyJSON.slice(options.undo, end);
-		fs.writeFileSync(USER_CFG_DIR + '/history.json', JSON.stringify(historyJSON, null, 2));
+		fs.writeFileSync(this.USER_CFG_DIR + '/history.json', JSON.stringify(historyJSON, null, 2));
 		console.log("History undone!");
 	}
 	public repeat(): void {
@@ -164,25 +158,25 @@ class SLLM {
 		console.log(last[0].llm);
 	}
 	public settingsView(): void {
-		let content = fs.readFileSync(USER_CFG_DIR + '/settings.json', 'utf-8');
+		let content = fs.readFileSync(this.USER_CFG_DIR + '/settings.json', 'utf-8');
 		console.log(content);
 		console.log('Settings can be changed with the `settings` command.');
 	}
 	public settingsPurge(): void{
-		fs.rmSync(USER_CFG_DIR + '/settings.json');
+		fs.rmSync(this.USER_CFG_DIR + '/settings.json');
 		console.log("Purged settings!");
 	}
 	public settings(options: any): void {
 		console.log(JSON.stringify(options));
 		fs.writeFileSync(
-			USER_CFG_DIR + '/settings.json',
+			this.USER_CFG_DIR + '/settings.json',
 			JSON.stringify(options, null, 2)
 		);
 		console.log('Created a new settings file');
 	}
 	public purge(): void {
-		fs.rmSync(USER_CFG_DIR + '/settings.json');
-		fs.rmSync(USER_CFG_DIR + '/history.json');
+		fs.rmSync(this.USER_CFG_DIR + '/settings.json');
+		fs.rmSync(this.USER_CFG_DIR + '/history.json');
 		console.log('Purged!');
 	}
 	public countTokens(options: any): void {
@@ -255,7 +249,7 @@ class SLLM {
 			console.log(reqData);
 			console.log('-------\r\n');
 		}
-		const completion = await openai.createCompletion(reqData)
+		const completion = await this.openai.createCompletion(reqData)
 		.catch((err)=>{
 			if(options.verbose){
 				console.log(err);
@@ -282,7 +276,7 @@ class SLLM {
 			console.log(reqData);
 			console.log('-------\r\n');
 		}
-		const completion = await openai.createChatCompletion(reqData)
+		const completion = await this.openai.createChatCompletion(reqData)
 		.catch((err)=>{
 			if(options.verbose){
 				console.log(err);
@@ -362,17 +356,17 @@ class SLLM {
 	// Ensure we have the needed files 
 	// Create them if we have to
 	private ensureFiles() {
-		if (!fs.existsSync(USER_CFG_DIR)) {
+		if (!fs.existsSync(this.USER_CFG_DIR)) {
 			// Create the dir
-			fs.mkdirSync(USER_CFG_DIR);
+			fs.mkdirSync(this.USER_CFG_DIR);
 		}
-		if (!fs.existsSync(USER_CFG_DIR + '/history.json')) {
+		if (!fs.existsSync(this.USER_CFG_DIR + '/history.json')) {
 			// Create the file
-			fs.writeFileSync(USER_CFG_DIR + '/history.json', '[]');
+			fs.writeFileSync(this.USER_CFG_DIR + '/history.json', '[]');
 		}
-		if (!fs.existsSync(USER_CFG_DIR + '/settings.json')) {
+		if (!fs.existsSync(this.USER_CFG_DIR + '/settings.json')) {
 			// Create the file
-			fs.writeFileSync(USER_CFG_DIR + '/settings.json', '{}');
+			fs.writeFileSync(this.USER_CFG_DIR + '/settings.json', '{}');
 		}
 	}
 	// Ensure we have the API key setup
@@ -388,7 +382,7 @@ class SLLM {
 	}
 	// Overwrite the CLI options with those saved in the file
 	private loadOpts(options:any):any {
-		const content = fs.readFileSync(USER_CFG_DIR + '/settings.json', 'utf-8');
+		const content = fs.readFileSync(this.USER_CFG_DIR + '/settings.json', 'utf-8');
 		const optJSON = JSON.parse(content);
 		options = Object.assign(optJSON, options);
 		return options;
@@ -399,16 +393,16 @@ class SLLM {
 			user: ogPrompt,
 			llm: output,
 		};
-		const historyJSON = this.loadHistory(MAX_HISTORY_STORE, false, true);
+		const historyJSON = this.loadHistory(this.MAX_HISTORY_STORE, false, true);
 		historyJSON.push(histNew);
 		fs.writeFileSync(
-			USER_CFG_DIR + '/history.json',
+			this.USER_CFG_DIR + '/history.json',
 			JSON.stringify(historyJSON, null, 2)
 		);
 	}
 	// Load history from the local log
 	private loadHistory(count:number = 1, reverse:boolean = true, json:boolean = false):any {// Really json or string
-		let content = fs.readFileSync(USER_CFG_DIR + '/history.json', 'utf-8');
+		let content = fs.readFileSync(this.USER_CFG_DIR + '/history.json', 'utf-8');
 		if (!content) {
 			console.log('WARNING: Can not read history file!');
 			content = '[]';
