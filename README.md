@@ -86,7 +86,7 @@ Usage: sllm [options] [command]
    (_-</ / /  ' \
   /___/_/_/_/_/_/
 
-CLI for OpenAI Large Language Models. v2.0.2
+CLI for OpenAI Large Language Models. v2.0.6
 Created by Mathieu Dombrock 2023. GPL3 License.
 
 
@@ -109,7 +109,6 @@ Commands:
   .models                        list the available models
 
 Note: All commands are prefixed with "." to avoid conflicting with prompts!
-
 ```
 
 ## Available Models
@@ -161,6 +160,7 @@ Options:
   -c, --context <string...>   context to prepend
   -d, --domain <string...>    subject domain to prepend
   -e, --expert <string...>    act as an expert on this domain
+  -C, --code <language>       respond only with executable code (default: "JavaScript")
   -5, --like-im-five          explain it like I'm 5 years old
   -H, --history <number>      prepend history (chatGPT mode)
   -f, --file <path>           prepend the given file contents
@@ -168,7 +168,6 @@ Options:
   -m, --model <model-name>    specify the model name (default: "gpt-3.5-turbo")
   --mock                      dont actually send the prompt to the API
   -h, --help                  display help for command
-
 ```
 
 ## Working With Files

@@ -62,6 +62,9 @@ class SLLM {
 		if (options.expert) {
 			prompt = this.preExpert(prompt, options.expert);
 		}
+		if (options.code) {
+			prompt = this.preCodeOnly(prompt, options.code);
+		}
 	
 		// Append History
 		const ogPrompt = prompt; // Cache for history etc
@@ -306,6 +309,9 @@ class SLLM {
 				expert.join(' ') +
 				'. The question I need you to answer is: ' +
 				prompt;
+	}
+	private preCodeOnly(prompt:string, lang:string){
+		return prompt + ' Respond ONLY with valid '+lang+' code that could be executed verbatim. Do not include an explanation outside of inline comments.';
 	}
 	/*
 	Utility Functions
