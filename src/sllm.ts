@@ -30,7 +30,6 @@ class SLLM {
 	
 		// Set static options
 		options = this.loadOpts(options);
-	
 		// Ensure numbers
 		options.maxTokens = Number(options.maxTokens) || 256;
 		options.temperature = Number(options.temperature) || 0.2;
@@ -390,8 +389,8 @@ class SLLM {
 	private loadOpts(options:any):any {
 		const content = fs.readFileSync(this.USER_CFG_DIR + '/settings.json', 'utf-8');
 		const optJSON = JSON.parse(content);
-		options = Object.assign(optJSON, options);
-		return options;
+		const res = Object.assign(options, optJSON);
+		return res;
 	}
 	// Record the chat history to the local log
 	private logHistory(ogPrompt:string, output:string):void {

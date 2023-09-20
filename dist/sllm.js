@@ -394,8 +394,8 @@ class SLLM {
     loadOpts(options) {
         const content = fs_1.default.readFileSync(this.USER_CFG_DIR + '/settings.json', 'utf-8');
         const optJSON = JSON.parse(content);
-        options = Object.assign(optJSON, options);
-        return options;
+        const res = Object.assign(options, optJSON);
+        return res;
     }
     // Record the chat history to the local log
     logHistory(ogPrompt, output) {
