@@ -1,6 +1,6 @@
 {
   "name": "sllm",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "A CLI for OpenAI LLMs",
   "main": "./dist/cli.js",
   "scripts": {
