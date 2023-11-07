@@ -108,7 +108,7 @@ program
 
 program
 	.command('.history-purge')
-	.description('view the conversation history')
+	.description('purge the conversation history')
 	.option('-n, --number <count>', 'how far back to read', '99')
 	.action((options)=>{
 		sllm.historyPurge(options);
