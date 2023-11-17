@@ -18,6 +18,8 @@ const os_1 = __importDefault(require("os"));
 const gpt_3_encoder_1 = require("gpt-3-encoder");
 const openai_1 = require("openai");
 const models_js_1 = require("./models.js");
+const TAG_USER = "_user_: ";
+const TAG_ASSIST = "_assistant_: ";
 class SLLM {
     constructor() {
         this.USER_CFG_DIR = os_1.default.homedir() + '/.config/sllm';
@@ -99,8 +101,8 @@ class SLLM {
             }
             // Strip dialog references
             if (options.history) {
-                output = output.replace('_user_:', '');
-                output = output.replace('_llm_:', '');
+                output = output.replace(TAG_USER, '');
+                output = output.replace(TAG_ASSIST, '');
             }
             // Check for empty response
             if (output.length < 1) {
@@ -403,9 +405,9 @@ class SLLM {
         }
         let historyStr = '';
         for (const item of historyJSON) {
-            historyStr += '_user_: ' + item.user;
+            historyStr += TAG_USER + item.user;
             historyStr += '\r\n';
-            historyStr += '_llm_: ' + item.llm;
+            historyStr += TAG_ASSIST + item.llm;
             historyStr += '\r\n';
         }
         return historyStr;

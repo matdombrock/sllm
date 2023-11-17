@@ -7,6 +7,9 @@ import { Configuration, CreateChatCompletionRequest, OpenAIApi } from 'openai';
 
 import { modelMap, modelAlias, ModelInfo } from './models.js';
 
+const TAG_USER : string = "_user_: ";
+const TAG_ASSIST : string = "_assistant_: ";
+
 class SLLM {
 	private USER_CFG_DIR: string = os.homedir() + '/.config/sllm';
 	private MAX_HISTORY_STORE: number = 64;
@@ -94,8 +97,8 @@ class SLLM {
 	
 		// Strip dialog references
 		if (options.history) {
-			output = output.replace('_user_:', '');
-			output = output.replace('_llm_:', '');
+			output = output.replace(TAG_USER, '');
+			output = output.replace(TAG_ASSIST, '');
 		}
 	
 		// Check for empty response
@@ -401,9 +404,9 @@ class SLLM {
 		}
 		let historyStr = '';
 		for (const item of historyJSON) {
-			historyStr += '_user_: ' + item.user;
+			historyStr += TAG_USER + item.user;
 			historyStr += '\r\n';
-			historyStr += '_llm_: ' + item.llm;
+			historyStr += TAG_ASSIST + item.llm;
 			historyStr += '\r\n';
 		}
 		return historyStr;
