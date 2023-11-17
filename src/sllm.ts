@@ -49,18 +49,6 @@ class SLLM {
 			throw 'Error: Unknown model: '+options.model;
 		}
 		// Preprocess the prompt
-		if (options.likeImFive) {
-			prompt = this.preLike5(prompt);
-		}
-		if (options.context) {
-			prompt = this.preContext(prompt, options.context);
-		}
-		if (options.domain) {
-			prompt = this.preDomain(prompt, options.domain);
-		}
-		if (options.expert) {
-			prompt = this.preExpert(prompt, options.expert);
-		}
 		if (options.code) {
 			prompt = this.preCodeOnly(prompt, options.code);
 		}
@@ -294,21 +282,6 @@ class SLLM {
 	/*
 	Prompt Pre-processing
 	*/
-	private preLike5(prompt:string):string{
-		return 'Answer this as if I\'m five years old: ' + prompt;
-	}
-	private preContext(prompt:string, context:Array<string>):string{
-		return 'In the context of ' + context.join(' ') + ', ' + prompt;
-	}
-	private preDomain(prompt:string, domain:Array<string>):string{
-		return 'In the domain of ' + domain.join(' ') + ', ' + prompt;
-	}
-	private preExpert(prompt:string, expert:Array<string>):string{
-		return 'Act as an expert on ' +
-				expert.join(' ') +
-				'. The question I need you to answer is: ' +
-				prompt;
-	}
 	private preCodeOnly(prompt:string, lang:string){
 		return prompt + ' Respond ONLY with valid '+lang+' code that could be executed verbatim. Do not include an explanation outside of inline comments.';
 	}
