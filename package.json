@@ -19,7 +19,8 @@
   "dependencies": {
     "commander": "^10.0.0",
     "gpt-3-encoder": "^1.1.4",
-    "openai": "^3.1.0"
+    "openai": "^4.19.0",
+    "readline-sync": "^1.4.10"
   },
   "devDependencies": {
     "@types/commander": "^2.12.2",

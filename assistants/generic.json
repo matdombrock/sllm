@@ -1,0 +1,7 @@
+{
+    "name": "assistant",
+    "instructions": "You are a general purpose AI assistant.",
+    "tools": [],
+    "filesPath": "null",
+    "model": "gpt-4-1106-preview"
+}

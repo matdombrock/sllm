@@ -1,24 +1,44 @@
 #! /usr/bin/env node
 
-import fs from 'fs';
+import fs, { PathLike } from 'fs';
 import os from 'os';
+import readlineSync from 'readline-sync';
+import { exec, execSync } from 'child_process';
 import { encode } from 'gpt-3-encoder';
-import { Configuration, CreateChatCompletionRequest, OpenAIApi } from 'openai';
+//import { Configuration, CreateChatCompletionRequest, OpenAIApi } from 'openai';
+import OpenAI from 'openai';
 
 import { modelMap, modelAlias, ModelInfo } from './models.js';
 
 const TAG_USER : string = "_user_: ";
 const TAG_ASSIST : string = "_assistant_: ";
 
+interface assistData {
+	name: String,
+	instructions: String,
+	tools: String[],
+	filesPath: PathLike,
+	model: String
+};
+interface assistLinkOptions {
+	name: string,
+	path: string
+};
+
+interface assistUploadOptions {
+	name: string,
+	path: string
+};
 class SLLM {
 	private USER_CFG_DIR: string = os.homedir() + '/.config/sllm';
 	private MAX_HISTORY_STORE: number = 64;
 	private openai;
-	private configuration = new Configuration({
+	private openaiCFGData = {
 		apiKey: process.env.OPENAI_API_KEY,
-	});
+	};
+	private assistAppendText = "";
 	constructor(){
-		this.openai = new OpenAIApi(this.configuration)
+		this.openai = new OpenAI(this.openaiCFGData);
 		// Ensure we have an api key env var
 		this.ensureAPIKey();
 		// Ensure we have our needed files
@@ -227,6 +247,345 @@ class SLLM {
 		console.log('You can specify a model with the -m option');
 		console.log('More info: https://platform.openai.com/docs/models/');
 	}
+	// List assistants
+	public async assistList(options: any, quiet : Boolean = false): Promise<any> {
+		const myAssistants = await this.openai.beta.assistants.list({
+			order: "desc",
+			limit: "100",
+		});
+		if (!quiet) 
+		{
+			if (options.full) {
+				console.log(myAssistants.data);
+			}
+			else {
+				for (const assistant of myAssistants.data) {
+					console.log(assistant.name);
+				}
+			}
+		}
+		return myAssistants;
+	}
+	// Delete assistant
+	public async assistDelete(options : any): Promise<any> {
+		const myAssistants = await this.openai.beta.assistants.list({
+			order: "desc",
+			limit: "100",
+		});
+		let found = false;
+		for (const assistant of myAssistants.data) {
+			let shouldDelete = true;
+			if (options.name) {
+				if (assistant.name != options.name) shouldDelete = false;
+			}
+			if (options.id) {
+				if (assistant.id != options.id) shouldDelete = false;
+			}
+			if (shouldDelete) {
+				found = true;
+				const response = await this.openai.beta.assistants.del(assistant.id);
+				console.log(response);
+			}
+			if (!found) {
+				console.log("Could not find target assistant");
+			}
+		}
+	}
+	public async assistLink(options : assistLinkOptions): Promise<any> {
+		const assistant = await this.findAssistant(options.name);
+		if (!assistant) return;
+		const assistantFiles = await this.openai.beta.assistants.files.list(
+			assistant.id
+		);
+		for (const file of assistantFiles.data) {
+			// Delete file
+			const deletedAssistantFile = await this.openai.beta.assistants.files.del(
+				assistant.id,
+				file.id
+			);
+			console.log("Deleted:");
+			console.log(deletedAssistantFile);
+		}
+		const listing = fs.readdirSync(options.path);
+		for (const fileName of listing) {
+			const file = await this.openai.files.create({
+				file: fs.createReadStream(options.path + "/" + fileName),
+				purpose: "assistants",
+			});
+			const myAssistantFile = await this.openai.beta.assistants.files.create(
+				assistant.id, 
+			{ 
+				file_id: file.id
+			});
+			console.log("Uploaded:");
+			console.log(myAssistantFile);
+		}
+	}
+	// Upload and link a single file
+	public async assistUpload(options: assistUploadOptions): Promise<any> {
+		const listing = fs.readdirSync(options.path);
+		const assistant = await this.findAssistant(options.name);
+		if (!assistant) return;
+		const file = await this.openai.files.create({
+			file: fs.createReadStream(options.path),
+			purpose: "assistants",
+		});
+		const myAssistantFile = await this.openai.beta.assistants.files.create(
+			assistant.id, 
+		{ 
+			file_id: file.id
+		});
+		console.log("Uploaded:");
+		console.log(myAssistantFile);
+	}
+	//
+	public async assistInit(options : any): Promise<any> {
+		const name = options.name || "assistant";
+		let data : assistData = {
+			name: name,
+			instructions: 'You are a general purpose AI assistant.',
+			tools: [""],
+			filesPath: "",
+			model: "gpt-4-1106-preview"
+		}
+		fs.writeFileSync(name + '.json', JSON.stringify(data, null, 2));
+		console.log('Created ' + name + '.json assistant template');
+		console.log('Load with .assist-create -f ' + name + '.json');
+	}
+	// Create a new assistant
+	public async assistCreate(options : any): Promise<any> {
+		let aData : assistData;// Assistant data
+		if (options.file) { // Load custom
+			const fileName = options.file;
+			const file = fs.readFileSync(fileName, "utf-8");
+			if (file) {
+				let fileJSON;
+				try{
+					fileJSON = JSON.parse(file);
+				}
+				catch(error) {
+					console.log("ERROR: Invalid assistant file (can't parse JSON): " + fileName);
+					return;
+				}
+				console.log(JSON.stringify(fileJSON, null, 2));
+				try {
+					aData = fileJSON;
+				}
+				catch(error) {
+					console.log("ERROR: Invalid assistant file (incorrect props): " + fileName);
+					return;
+				}
+			}
+			else{
+				console.log("ERROR: Can't open file " + fileName);
+				return;
+			}
+		}
+		else { // Load generic
+			console.log("Loading generic assistant...");
+			const fileName = "generic.json";
+			const file = fs.readFileSync(__dirname + "/../assistants/" + fileName, "utf-8");
+			if (file) {
+				const fileJSON = JSON.parse(file);
+				console.log(JSON.stringify(fileJSON, null, 2));
+				aData = fileJSON;
+			}
+			else{
+				console.log("Can't open file " + fileName);
+				return;
+			}
+		}
+		// Check for existing assistant with the same name
+		const myAssistants = await this.assistList({}, true);
+		for (const existing of myAssistants.data) {
+			if (existing.name == aData.name) {
+				console.log("ERROR: An assistant with this name already exists. Aborting.");
+				return;
+			}
+		}
+		// Setup files
+		const fileIds = [];
+		if (aData.filesPath !== "null") {
+			if (!fs.existsSync(aData.filesPath)) {
+				console.log("Can't read files path for this assistant");
+				console.log(aData.filesPath);
+				return;
+			}
+			const fileUploads = fs.readdirSync(aData.filesPath, "utf-8");
+			for (const upFileName of fileUploads) {
+				console.log("Uploading file..." + upFileName);
+				const file = await this.openai.files.create({
+					file: fs.createReadStream(aData.filesPath + "/" + upFileName),
+					purpose: "assistants",
+				});
+				console.log("id: "+file.id);
+				fileIds.push(file.id);
+			}
+		}
+		// Now we create an assistant with the assist data
+		const assistant = await this.openai.beta.assistants.create({
+			name: aData.name,
+			instructions: aData.instructions,
+			tools: [{ type: "code_interpreter" }, {type: "retrieval"}],
+			file_ids: fileIds,
+			model: "gpt-4-1106-preview"
+		});
+		console.log("ASSISTANT ID:");
+		console.log(assistant.id);
+	}
+	public async assist(options : any): Promise<void> {
+		// Assist mode
+		console.log("ASSISTANT MODE (BETA)");
+		const assistName = options.name || "assistant";
+		const existing = await this.findAssistant(assistName);
+		const assistId = existing.id;
+		if (!existing) return;
+		console.log(JSON.stringify(existing, null, 2));
+		const thread = await this.openai.beta.threads.create();
+		const delay = ms => new Promise(res => setTimeout(res, ms));
+		while (true) {
+			let prompt = readlineSync.question(">> ");
+			if (prompt[0] === ".") {// We have a special command
+				const parsed = prompt.split(' ');
+				const cmd = parsed[0];
+				// Switch?
+				if (cmd === ".exit") {
+					console.log("Good bye!");
+					return;
+				}
+				else if (cmd === ".run") {
+					const sysCmd = parsed.slice(1).join(' ');
+					const res = await execSync(sysCmd, { encoding: 'utf8' });
+					console.log(res);
+				}
+				else if (cmd === ".cd") {
+					const path = parsed[1];
+					if (!fs.existsSync(path)) {
+						console.log("ERROR: Can't find the path: " + path);
+						continue;
+					}
+					process.chdir(path);
+					const res = await execSync('ls', {encoding: 'utf-8'});
+					console.log(res);
+				}
+				else if (cmd === ".link") {
+					if (parsed.length !== 2) {
+						console.log("ERROR: Malformed .link command! Missing path?");
+						continue;
+					}
+					const dir = parsed[1];
+					if (!fs.existsSync(dir)) {
+						console.log("ERROR: Can't find/access directory: " + dir);
+						continue;
+					}
+					await this.assistLink({name: assistName, path: dir});
+					console.log("Linked files in: " + dir);
+				}
+				else if (cmd === ".append") {
+					if (parsed.length !== 2) {
+						this.assistAppendText = "";
+						console.log("Removed any appended file. Nothing extra will be sent with the next message.");
+						continue;
+					}
+					this.assistAppend(parsed[1]);
+					console.log("The contents of the file at " + parsed[1] + " will be appended to your next message.");
+				}
+				else if (cmd === ".upload") {
+					console.log("UPLOAD");
+					if (parsed.length !== 2) {
+						console.log("ERROR: Malformed .upload command! Missing path?");
+						continue;
+					}
+					this.assistUpload({name: assistName, path: parsed[1]})
+				}
+				else if (cmd === ".help") {
+					let msg = "SLLM ASSISTANT HELP: \r\n";
+					msg += ".exit | stop this program \r\n";
+					msg += ".run <system_command ...> | execute a system command \r\n";
+					msg += ".cd <path> | change the working directory \r\n";
+					msg += ".link <path> | link a new set of files to this assistant - deletes old files \r\n";
+					msg += ".append <path> | append target file contents to your next message - omit <path> to reset - does not upload file \r\n";
+					msg += ".upload <path> | upload target file to this assistant \r\n";
+					msg += ".help | show this help message \r\n";
+					console.log(msg);
+				}
+				else {
+					console.log("ERROR: Command not found: " + cmd);
+				}
+				continue;
+			}
+			// Check if we have file contents to append
+			if (this.assistAppendText !== "") {
+				prompt += " This is the file contents: \r\n" + this.assistAppendText;
+				this.assistAppendText = "";
+			}
+			const message = await this.openai.beta.threads.messages.create(
+				thread.id,
+				{
+				  role: "user",
+				  content: prompt
+				}
+			);
+			const run = await this.openai.beta.threads.runs.create(
+				thread.id,
+				{ 
+				  assistant_id: assistId,
+				  //instructions: "Please address the user as "+userName+". The user has a premium account."
+				}
+			);
+			let completed = false;
+			while (!completed) {
+				const runCheck = await this.openai.beta.threads.runs.retrieve(
+					thread.id,
+					run.id
+				);
+				console.log("Thinking (" + runCheck?.status + ") ...");
+				if (runCheck?.status == "completed") completed = true;
+				else await delay(5000);
+			}
+			const messages = await this.openai.beta.threads.messages.list(
+				thread.id
+			);
+			// Output
+			if (messages.body.data[0].content[0].text?.value) {
+				console.log(messages.body.data[0].content[0].text.value);
+			}
+			else {
+				console.log('Error detecting message...');
+				console.log(JSON.stringify(messages, null, 2));
+			}
+		}
+		return;
+	}
+	// ASSISTANT HELPERS
+	// Returns 0 on fail
+	private async findAssistant(name : string) : Promise<any> {
+		const myAssistants = await this.assistList({}, true);
+		for (const existing of myAssistants.data) {
+			if (existing.name == name) {
+				return existing;
+			}
+		}
+		console.log("Can't find an assistant with name: " + name);
+		return 0;
+	}
+	// Returns 0 on fail
+	private async assistAppend(path : PathLike) : Promise<any> {
+		if (!fs.existsSync(path)) {
+			console.log("ERROR: Can't find file at path: "+path);
+			return 0;
+		}
+		const content = fs.readFileSync(path, "utf-8");
+		this.assistAppendText = content;
+	}
+	public async deleteFile(options) {
+		const list = await this.openai.files.list();
+
+		for await (const file of list) {
+			console.log(file);
+			await this.openai.files.del(file.id);
+		}
+	}
 	/*
 	API Wrappers
 	*/
@@ -242,7 +601,7 @@ class SLLM {
 			console.log(reqData);
 			console.log('-------\r\n');
 		}
-		const completion = await this.openai.createCompletion(reqData)
+		const completion = await this.openai.chat.completions.create(reqData)
 		.catch((err)=>{
 			if(options.verbose){
 				console.log(err);
@@ -253,12 +612,12 @@ class SLLM {
 			}
 			process.exit();
 		});
-		return completion.data.choices[0].text || "No response!";
+		return completion?.choices[0]?.message?.content || "No response";
 	}
 	// Wrapper for chat completion
 	private async sendReqGPT(prompt:string, options:any, modelData:any): Promise<string>{
 		// Use gpt3.5 by default
-		const reqData: CreateChatCompletionRequest = {
+		const reqData: any = {
 			model: modelData.model,
 			messages: [{ role: 'user', content: prompt }],
 			max_tokens: options.maxTokens,
@@ -269,7 +628,7 @@ class SLLM {
 			console.log(reqData);
 			console.log('-------\r\n');
 		}
-		const completion = await this.openai.createChatCompletion(reqData)
+		const completion = await this.openai.chat.completions.create(reqData)
 		.catch((err)=>{
 			if(options.verbose){
 				console.log(err);
@@ -280,7 +639,7 @@ class SLLM {
 			}
 			process.exit();
 		});
-		return completion?.data?.choices[0]?.message?.content || "No response";
+		return completion?.choices[0]?.message?.content || "No response";
 	}
 	/*
 	Prompt Pre-processing

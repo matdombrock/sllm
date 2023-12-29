@@ -1,0 +1,7 @@
+{
+    "name": "swe",
+    "instructions": "You are an expert teacher of software engineering.",
+    "tools": [],
+    "filesPath": "null",
+    "model": "gpt-4-1106-preview"
+}

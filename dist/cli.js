@@ -128,4 +128,63 @@ program
     .action(() => {
     sllm.listModels();
 });
+program
+    .command('.assist')
+    .description('enter assistant mode (beta)')
+    .option('-n, --name <string>', 'the name of the assistant to load')
+    .action((options) => {
+    sllm.assist(options);
+});
+program
+    .command('.assist-init')
+    .description('initialize a new assistant template file')
+    .option('-n, --name <string>', 'the name of the new assistant')
+    .action((options) => {
+    sllm.assistInit(options);
+});
+program
+    .command('.assist-create')
+    .description('create a new assistant from a json file')
+    .option('-f, --file <string>', 'the path to the assistant definition to load')
+    .action((options) => {
+    sllm.assistCreate(options);
+});
+program
+    .command('.assist-list')
+    .description('list assistants')
+    .option('-f, --full', 'show full listing data')
+    .action((options) => {
+    sllm.assistList(options);
+});
+program
+    .command('.assist-delete')
+    .description('delete assistants - no args to delete all')
+    .option('-i, --id <string>', 'the id of the assistant or thread to delete')
+    .option('-n, --name <string>', 'the name of the assistant or thread to delete')
+    .action((options) => {
+    sllm.assistDelete(options);
+});
+program
+    .command('.delete-file')
+    .description('deletes files  - no args to delete all')
+    .option('-i, --id <string>', 'the id of file to delete')
+    .action((options) => {
+    sllm.deleteFile(options);
+});
+program
+    .command('.assist-upload')
+    .description('upload a file to the given assistant - use `.link` for for multi-upload.')
+    .option('-p, --path <string>', 'the path to the (single) file to upload.')
+    .option('-n, --name <string>', 'the name of the assistant to link the file to')
+    .action((options) => {
+    sllm.assistUpload(options);
+});
+program
+    .command('.assist-link')
+    .description('link a new set of files to the assistant (upload and attach) - deletes previous files')
+    .option('-n, --name <string>', 'the name of the assistant to link these files to')
+    .option('-p, --path <string>', 'the path to the directory to upload (link)')
+    .action((options) => {
+    sllm.assistLink(options);
+});
 program.parse();

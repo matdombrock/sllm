@@ -1,0 +1,5 @@
+GAME SETTING INFORMATION
+
+Use this file to describe the world when the player looks
+
+In the location that the player starts the game there is a large red rock that the player notices the first time they look
